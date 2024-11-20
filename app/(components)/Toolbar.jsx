@@ -92,6 +92,28 @@ export default function Toolbar({
     }
   };
 
+  const handleFontSizeChange = (newFs) => {
+    const parsedFs = parseInt(newFs, 10);
+
+    // Allow clearing the field but don't update state with invalid values
+    if (newFs === "") {
+      setSelected((prev) => ({ ...prev, fontSize: "" }));
+      return;
+    }
+
+    // Only update if the parsed width is valid
+    if (selected && !isNaN(parsedFs) && parsedFs > 0) {
+      setSelected((prev) => ({ ...prev, fontSize: parsedFs }));
+
+      // Update the element in the list
+      setElements((prevElements) => {
+        return prevElements.map((el) => {
+          return el.id === selected.id ? { ...el, fontSize: parsedFs } : el;
+        });
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col border-b bg-gray-50">
       <div className="flex items-center space-x-1 p-1">
@@ -148,13 +170,25 @@ export default function Toolbar({
                   onChange={handleTextColorChange} // Handle color change
                   value={color} // Set default value
                 />
+
+                <div className="flex items-center gap-4">
+                  <label htmlFor="el-fontsize">Font Size:</label>
+                  <input
+                    className="max-w-20 px-2 py-[0.1rem] border-[1px] border-[#bbb] rounded-sm outline-none focus:border-[#676767]"
+                    type="text"
+                    name="el-fontsize"
+                    id="el-fontsize"
+                    value={selected?.fontSize || "20"} // Ensures a default value to avoid the field being empty
+                    onChange={(e) => handleFontSizeChange(e.target.value)}
+                  />
+                </div>
               </>
             ) : (
               <></>
             )}
 
             {/* Set Width */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ml-4">
               <label htmlFor="el-width">Width:</label>
               <input
                 className="max-w-20 px-2 py-[0.1rem] border-[1px] border-[#bbb] rounded-sm outline-none focus:border-[#676767]"

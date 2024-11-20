@@ -223,6 +223,7 @@ export default function MainArea({
               top: el.y,
               width: el.type === "triangle" ? 0 : el.width, // Triangle doesn't use width directly
               height: el.type === "triangle" ? 0 : el.height, // Triangle doesn't use height directly
+              fontSize: el.fontSize || 24,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
