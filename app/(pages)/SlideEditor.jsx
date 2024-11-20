@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TopBar from "../(components)/TopBar";
 import Toolbar from "../(components)/Toolbar";
 import Ruler from "../(components)/Ruler";
@@ -10,22 +10,57 @@ import MainArea from "../(components)/MainArea";
 export default function SlideEditor() {
   const [elements, setElements] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [color, setColor] = useState("#FFBE7A");
+
+  const [slides, setSlides] = useState([]);
+
+  const uid = function () {
+    var id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    console.log(id);
+    return id;
+  };
 
   const addElement = (type) => {
-    const newElement = {
-      id: Date.now(),
-      type,
-      x: 100,
-      y: 100,
-      width: 100,
-      height: 100,
-      text: type === "text" ? "New Text" : "",
-    };
-    setElements([...elements, newElement]);
+    setElements((prevElements) => {
+      if (!prevElements) return [];
+
+      var tempElem = {
+        id: uid(), // Unique ID
+        type,
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        bgColor: color,
+        textColor: "#000",
+        selected: true,
+        text: type === "text" ? "Enter text" : "",
+      };
+
+      setSelected(tempElem);
+      return [
+        ...prevElements.map((element) => ({ ...element, selected: false })),
+        tempElem,
+      ];
+    });
   };
 
   const handleMouseDown = (e, id) => {
     e.preventDefault();
+
+    setElements((prevElements) => {
+      if (!prevElements) return [];
+      return prevElements.map((element) => {
+        var tempElem =
+          id === element.id
+            ? { ...element, selected: true }
+            : { ...element, selected: false };
+        setSelected(tempElem);
+        return tempElem;
+      });
+    });
+
     setSelectedElement({ id, startX: e.clientX, startY: e.clientY });
   };
 
@@ -59,6 +94,47 @@ export default function SlideEditor() {
     );
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if the target is a textarea or other input element
+      if (
+        e.target.tagName === "TEXTAREA" ||
+        e.target.tagName === "INPUT" ||
+        e.target.isContentEditable ||
+        e.ctrlKey ||
+        e.altKey ||
+        e.metaKey ||
+        e.shiftKey
+      ) {
+        return; // Ignore shortcuts if focused on editable content
+      }
+
+      // Handle shortcuts only when not in an input
+      if (e.key.toLowerCase() === "r") {
+        addElement("rectangle");
+      } else if (e.key.toLowerCase() === "o") {
+        addElement("ellipse");
+      } else if (e.key.toLowerCase() === "t") {
+        addElement("text");
+      } else if (e.key.toLowerCase() === "p") {
+        addElement("triangle");
+      }
+
+      if (!!selected && e.key === "Delete") {
+        setElements((prev) => prev.filter((el) => el.id !== selected.id));
+        setSelected((prevSelected) =>
+          prevSelected?.id === selected.id ? null : prevSelected
+        );
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [addElement]);
+
   return (
     <div
       className="flex flex-col h-screen bg-background text-foreground"
@@ -66,11 +142,21 @@ export default function SlideEditor() {
       onMouseUp={handleMouseUp}
     >
       <TopBar />
-      <Toolbar addElement={addElement} />
+      <Toolbar
+        addElement={addElement}
+        setElements={setElements}
+        selected={selected}
+        setSelected={setSelected}
+        color={color}
+        setColor={setColor}
+      />
       <div className="flex flex-1">
         <Sidebar />
         <MainArea
           elements={elements}
+          color={color}
+          setElements={setElements}
+          setSelected={setSelected}
           onMouseDown={handleMouseDown}
           onTextChange={handleTextChange}
           addElement={addElement}
