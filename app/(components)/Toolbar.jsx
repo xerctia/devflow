@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
   Undo,
   Redo,
@@ -20,6 +22,7 @@ import {
   Baseline,
 } from "lucide-react";
 import ShapeButton from "./ShapeButton";
+import Select from "react-select";
 
 export default function Toolbar({
   addElement,
@@ -27,8 +30,12 @@ export default function Toolbar({
   setSelected,
   color,
   setColor,
+  font,
+  setFont,
   setElements,
 }) {
+  const [fonts, setFonts] = useState([]);
+
   const handleColorChange = (e) => {
     setColor(e.target.value);
     console.log("Selected color:", e.target.value);
@@ -92,6 +99,30 @@ export default function Toolbar({
     }
   };
 
+  const handleBorderRadiusChange = (newBorderRadius) => {
+    const parsedBorderRadius = parseInt(newBorderRadius, 10);
+
+    // Allow clearing the field but don't update state with invalid values
+    if (newBorderRadius === "") {
+      setSelected((prev) => ({ ...prev, height: "" }));
+      return;
+    }
+
+    // Only update if the parsed width is valid
+    if (selected && !isNaN(parsedBorderRadius) && parsedBorderRadius > 0) {
+      setSelected((prev) => ({ ...prev, borderRadius: parsedBorderRadius }));
+
+      // Update the element in the list
+      setElements((prevElements) => {
+        return prevElements.map((el) => {
+          return el.id === selected.id
+            ? { ...el, borderRadius: parsedBorderRadius }
+            : el;
+        });
+      });
+    }
+  };
+
   const handleFontSizeChange = (newFs) => {
     const parsedFs = parseInt(newFs, 10);
 
@@ -112,6 +143,63 @@ export default function Toolbar({
         });
       });
     }
+  };
+
+  useEffect(() => {
+    const fetchFonts = async () => {
+      const response = await fetch(
+        `https://www.googleapis.com/webfonts/v1/webfonts?key=${process.env.NEXT_PUBLIC_GOOGLE_FONT_API}`
+      );
+      const data = await response.json();
+      setFonts(data.items); // Assuming you get an array of fonts
+    };
+
+    fetchFonts();
+  }, []);
+
+  const fontOptions = fonts.map((font) => ({
+    value: font.family,
+    label: font.family,
+  }));
+
+  const fontSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      minWidth: 200,
+      maxHeight: "20px",
+      padding: "0.1rem 0.5rem",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      fontSize: "14px", // Custom font size for the dropdown options
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      fontSize: "14px", // Option text size
+      padding: "10px", // Option padding
+      backgroundColor: state.isSelected ? "#ddd" : provided.backgroundColor,
+    }),
+  };
+
+  const handleFontChange = (selectedOption) => {
+    const newFont = selectedOption.value;
+    setFont(newFont);
+
+    // const updatedElements = elements.map((el) => {
+    //   if (el.id === selected.id) {
+    //     return { ...el, font: newFont };
+    //   }
+    //   return el;
+    // });
+
+    setElements((prevElements) => {
+      return prevElements.map((el) => {
+        if (el.id === selected.id) {
+          return { ...el, font: newFont };
+        }
+        return el;
+      });
+    });
   };
 
   return (
@@ -182,6 +270,19 @@ export default function Toolbar({
                     onChange={(e) => handleFontSizeChange(e.target.value)}
                   />
                 </div>
+
+                <div className="ml-4">
+                  <Select
+                    options={fontOptions}
+                    onChange={handleFontChange}
+                    value={{
+                      label: font || "Poppins",
+                      value: font || "Poppins",
+                    }}
+                    styles={fontSelectStyles}
+                    isSearchable
+                  />
+                </div>
               </>
             ) : (
               <></>
@@ -210,6 +311,19 @@ export default function Toolbar({
                 id="el-height"
                 value={selected?.height || "100"} // Ensures a default value to avoid the field being empty
                 onChange={(e) => handleHeightChange(e.target.value)}
+              />
+            </div>
+
+            {/* Set Border Radius */}
+            <div className="flex items-center gap-4 ml-4">
+              <label htmlFor="el-borrad">Border Radius:</label>
+              <input
+                className="max-w-20 px-2 py-[0.1rem] border-[1px] border-[#bbb] rounded-sm outline-none focus:border-[#676767]"
+                type="text"
+                name="el-borrad"
+                id="el-borrad"
+                value={selected?.borderRadius || "8"} // Ensures a default value to avoid the field being empty
+                onChange={(e) => handleBorderRadiusChange(e.target.value)}
               />
             </div>
           </div>

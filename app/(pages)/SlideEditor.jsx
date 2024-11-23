@@ -6,14 +6,16 @@ import Toolbar from "../(components)/Toolbar";
 import Ruler from "../(components)/Ruler";
 import Sidebar from "../(components)/Sidebar";
 import MainArea from "../(components)/MainArea";
+// import Head from "next/head";
 
 export default function SlideEditor() {
   const [elements, setElements] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selected, setSelected] = useState(null);
   const [color, setColor] = useState("#FFBE7A");
+  const [font, setFont] = useState("Poppins");
 
-  const [slides, setSlides] = useState([]);
+  // const [slides, setSlides] = useState([]);
 
   const uid = function () {
     var id = Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -32,7 +34,9 @@ export default function SlideEditor() {
         y: 50,
         width: 100,
         height: 100,
+        borderRadius: 8,
         fontSize: 20,
+        font: font || "Poppins",
         bgColor: color,
         textColor: "#000",
         selected: true,
@@ -51,18 +55,24 @@ export default function SlideEditor() {
     e.preventDefault();
 
     setElements((prevElements) => {
-      if (!prevElements) return [];
-      return prevElements.map((element) => {
-        var tempElem =
-          id === element.id
-            ? { ...element, selected: true }
-            : { ...element, selected: false };
-        setSelected(tempElem);
-        return tempElem;
-      });
+      // Update the elements array, marking only the clicked element as selected
+      return prevElements.map((element) => ({
+        ...element,
+        selected: element.id === id,
+      }));
     });
 
+    // Find the selected element and update the `selected` state
+    const selectedEl = elements.find((element) => element.id === id);
+    if (selectedEl) {
+      setSelected(selectedEl); // Set the selected element in state
+    }
+
+    // Optionally set additional properties for dragging or other purposes
     setSelectedElement({ id, startX: e.clientX, startY: e.clientY });
+
+    // Log the selected font after state update
+    console.log(selectedEl?.font || "No font selected");
   };
 
   const handleMouseMove = (e) => {
@@ -137,32 +147,37 @@ export default function SlideEditor() {
   }, [addElement]);
 
   return (
-    <div
-      className="flex flex-col h-screen bg-background text-foreground"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    >
-      <TopBar />
-      <Toolbar
-        addElement={addElement}
-        setElements={setElements}
-        selected={selected}
-        setSelected={setSelected}
-        color={color}
-        setColor={setColor}
-      />
-      <div className="flex flex-1">
-        <Sidebar />
-        <MainArea
-          elements={elements}
-          color={color}
-          setElements={setElements}
-          setSelected={setSelected}
-          onMouseDown={handleMouseDown}
-          onTextChange={handleTextChange}
+    <>
+      <div
+        className="flex flex-col h-screen bg-background text-foreground"
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <TopBar />
+        <Toolbar
           addElement={addElement}
+          setElements={setElements}
+          selected={selected}
+          setSelected={setSelected}
+          color={color}
+          setColor={setColor}
+          font={font}
+          setFont={setFont}
         />
+        <div className="flex flex-1">
+          <Sidebar />
+          <MainArea
+            elements={elements}
+            color={color}
+            font={font}
+            setElements={setElements}
+            setSelected={setSelected}
+            onMouseDown={handleMouseDown}
+            onTextChange={handleTextChange}
+            addElement={addElement}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
