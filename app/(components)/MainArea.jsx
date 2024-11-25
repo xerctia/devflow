@@ -2,6 +2,7 @@
 
 import Head from "next/head";
 import React, { useCallback, useEffect, useState } from "react";
+import useSlideStore from "../zustandStores/useSlideStore";
 
 const DynamicFontLoader = ({ font }) => {
   useEffect(() => {
@@ -37,6 +38,8 @@ const DynamicFontLoader = ({ font }) => {
 export default function MainArea({
   elements,
   setElements,
+  // slides,
+  activeSlide,
   color,
   font,
   setSelected,
@@ -48,6 +51,8 @@ export default function MainArea({
   const [resizeDirection, setResizeDirection] = useState(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+
+  const { slides } = useSlideStore();
 
   const onResizeStart = useCallback((e, id, direction) => {
     e.stopPropagation();
@@ -70,18 +75,18 @@ export default function MainArea({
           const updatedElement = { ...el };
 
           if (resizeDirection.includes("right")) {
-            updatedElement.width = Math.max(50, el.width + dx);
+            updatedElement.width = Math.max(1, el.width + dx);
           }
           if (resizeDirection.includes("left")) {
-            const newWidth = Math.max(50, el.width - dx);
+            const newWidth = Math.max(1, el.width - dx);
             updatedElement.x = el.x + (el.width - newWidth);
             updatedElement.width = newWidth;
           }
           if (resizeDirection.includes("bottom")) {
-            updatedElement.height = Math.max(50, el.height + dy);
+            updatedElement.height = Math.max(1, el.height + dy);
           }
           if (resizeDirection.includes("top")) {
-            const newHeight = Math.max(50, el.height - dy);
+            const newHeight = Math.max(1, el.height - dy);
             updatedElement.y = el.y + (el.height - newHeight);
             updatedElement.height = newHeight;
           }
@@ -248,151 +253,159 @@ export default function MainArea({
             }
           }}
           id="working-area"
-          className="aspect-[16/9] bg-white shadow-lg mx-auto max-w-4xl relative"
+          className="aspect-[16/9] bg-white shadow-lg mx-auto max-w-4xl relative overflow-hidden"
         >
           {elements &&
-            elements.map((el) => (
-              <div
-                key={el.id}
-                style={{
-                  position: "absolute",
-                  left: el.x,
-                  top: el.y,
-                  width: el.type === "triangle" ? 0 : el.width, // Triangle doesn't use width directly
-                  height: el.type === "triangle" ? 0 : el.height, // Triangle doesn't use height directly
-                  // borderRadius: el.borderRadius,
-                  fontSize: el.fontSize || 24,
-                  fontFamily: el.font,
-                  fontWeight: 400,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  // border:
-                  //   el.type === "text"
-                  //     ? "none"
-                  //     : el.type === "triangle"
-                  //     ? "none"
-                  //     : "1px solid #FFBE7A",
-                  border: "none",
-                  borderRadius: el.type === "ellipse" ? "50%" : el.borderRadius,
-                  // backgroundColor:
-                  //   el.type !== "text" && el.type !== "triangle"
-                  //     ? "#FFBE7A"
-                  //     : "transparent",
-                  backgroundColor: el.selected ? el.bgColor : el.bgColor,
-                  color: el.textColor || "#000",
-                  cursor: "move",
-                }}
-                // onClick={(e) => selectElement(e, el.id)}
-                onDoubleClick={() => {
-                  if (el.type === "rectangle" || el.type === "ellipse") {
-                    handleDoubleClick(el.id);
-                  }
-                }}
-                onMouseDown={(e) => {
-                  // handleSelect(e, el.id);
-                  if (e.target.tagName !== "TEXTAREA") {
-                    onMouseDown(e, el.id);
-                  }
-                }}
-                // onClick={() => handleElementClick(el.id)}
-              >
-                {(el.type === "rectangle" || el.type === "ellipse") &&
-                  el.text && (
-                    <textarea
-                      value={el.text}
-                      onChange={(e) => onTextChange(el.id, e.target.value)}
-                      style={{
-                        width: "80%", // Adjust size as needed
-                        height: "50%", // Adjust size as needed
-                        border: "none",
-                        resize: "none",
-                        textAlign: "center",
-                        background: "transparent",
-                        outline: "none",
-                      }}
-                    />
-                  )}
+            elements.map((el) =>
+              el.slideId === activeSlide.id ? (
+                <div
+                  key={el.id}
+                  style={{
+                    position: "absolute",
+                    left: el.x,
+                    top: el.y,
+                    width: el.type === "triangle" ? 0 : el.width, // Triangle doesn't use width directly
+                    height: el.type === "triangle" ? 0 : el.height, // Triangle doesn't use height directly
+                    minHeight: 0,
+                    // borderRadius: el.borderRadius,
+                    fontSize: el.fontSize || 24,
+                    fontFamily: el.font,
+                    fontWeight: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    // border:
+                    //   el.type === "text"
+                    //     ? "none"
+                    //     : el.type === "triangle"
+                    //     ? "none"
+                    //     : "1px solid #FFBE7A",
+                    border: "none",
+                    borderRadius:
+                      el.type === "ellipse" ? "50%" : el.borderRadius,
+                    // backgroundColor:
+                    //   el.type !== "text" && el.type !== "triangle"
+                    //     ? "#FFBE7A"
+                    //     : "transparent",
+                    backgroundColor: el.text ? "transparent" : el.bgColor,
+                    color: el.textColor || "#000",
+                    cursor: "move",
+                  }}
+                  // onClick={(e) => selectElement(e, el.id)}
+                  onDoubleClick={() => {
+                    if (el.type === "rectangle" || el.type === "ellipse") {
+                      handleDoubleClick(el.id);
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    // handleSelect(e, el.id);
+                    if (e.target.tagName !== "TEXTAREA") {
+                      onMouseDown(e, el.id);
+                    }
+                  }}
+                  // onClick={() => handleElementClick(el.id)}
+                >
+                  {(el.type === "rectangle" || el.type === "ellipse") &&
+                    el.text && (
+                      <textarea
+                        value={el.text}
+                        onChange={(e) => onTextChange(el.id, e.target.value)}
+                        style={{
+                          width: "80%", // Adjust size as needed
+                          height: "50%", // Adjust size as needed
+                          border: "none",
+                          resize: "none",
+                          textAlign: "center",
+                          background: "transparent",
+                          outline: "none",
+                        }}
+                      />
+                    )}
 
-                {el.type === "text" ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: el.y,
-                      left: el.x,
-                      width: el.width || "200px",
-                      height: el.height || "50px",
-                      padding: "8px",
-                      boxSizing: "border-box",
-                      backgroundColor: "transparent",
-                      border: "1px dashed gray",
-                    }}
-                    onMouseDown={(e) => {
-                      // Allow dragging only if the outer div is clicked, not the textarea
-                      if (e.target.tagName !== "TEXTAREA") {
-                        onMouseDown(e, el.id);
-                      }
-                    }}
-                  >
-                    <textarea
-                      value={el.text || ""}
-                      onChange={(e) => onTextChange(el.id, e.target.value)}
-                      onFocus={() => console.log("entered editing mode")} // Log focus for testing
-                      onBlur={() => console.log("exited editing mode")} // Log blur for testing
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        border: "none",
-                        resize: "none",
-                        textAlign: "center",
-                        backgroundColor: "transparent",
-                        outline: "none",
-                        zIndex: 2,
-                        cursor: "text", // Use text cursor when hovering over the textarea
-                      }}
-                    />
-                  </div>
-                ) : el.type === "triangle" ? (
-                  <div
-                    style={{
-                      width: 0,
-                      height: 0,
-                      borderRadius: "6px",
-                      borderLeft: `${el.width / 2}px solid transparent`,
-                      borderRight: `${el.width / 2}px solid transparent`,
-                      borderBottom: `${el.height}px solid #FFBE7A`,
-                    }}
-                  />
-                ) : null}
-
-                {/* Resizing Handles */}
-                {["top-left", "top-right", "bottom-left", "bottom-right"].map(
-                  (direction) => (
+                  {el.type === "text" ? (
                     <div
-                      key={direction}
                       style={{
-                        visibility: el.selected ? "visible" : "hidden",
                         position: "absolute",
-                        width: "10px",
-                        height: "10px",
-                        backgroundColor: "gray",
-                        cursor:
-                          direction === "top-left"
-                            ? "nw-resize"
-                            : direction === "top-right"
-                            ? "ne-resize"
-                            : direction === "bottom-left"
-                            ? "sw-resize"
-                            : "se-resize",
-                        [direction.split("-")[0]]: -5,
-                        [direction.split("-")[1]]: -5,
+                        // top: el.y,
+                        // left: el.x,
+                        width: el.width || "200px",
+                        height: el.height || "50px",
+                        padding: "8px",
+                        boxSizing: "border-box",
+                        backgroundColor: "transparent",
+                        // border: "1px dashed gray",
                       }}
-                      onMouseDown={(e) => onResizeStart(e, el.id, direction)}
+                      onMouseDown={(e) => {
+                        // Allow dragging only if the outer div is clicked, not the textarea
+                        if (e.target.tagName !== "TEXTAREA") {
+                          onMouseDown(e, el.id);
+                        }
+                      }}
+                    >
+                      <textarea
+                        value={el.text || ""}
+                        onChange={(e) => onTextChange(el.id, e.target.value)}
+                        onFocus={() => console.log("entered editing mode")} // Log focus for testing
+                        onBlur={() => console.log("exited editing mode")} // Log blur for testing
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          border: "none",
+                          resize: "none",
+                          textAlign: "center",
+                          backgroundColor: "transparent",
+                          outline: "none",
+                          zIndex: 2,
+                          cursor: "text", // Use text cursor when hovering over the textarea
+                        }}
+                      />
+                    </div>
+                  ) : el.type === "triangle" ? (
+                    <div
+                      style={{
+                        width: 0,
+                        height: 0,
+                        borderRadius: "6px",
+                        borderLeft: `${el.width / 2}px solid transparent`,
+                        borderRight: `${el.width / 2}px solid transparent`,
+                        borderBottom: `${el.height}px solid #FFBE7A`,
+                      }}
                     />
-                  )
-                )}
-              </div>
-            ))}
+                  ) : null}
+
+                  {/* Resizing Handles */}
+                  {["top-left", "top-right", "bottom-left", "bottom-right"].map(
+                    (direction) => (
+                      <div
+                        key={direction}
+                        style={{
+                          visibility: el.selected ? "visible" : "hidden",
+                          position: "absolute",
+                          width: "10px",
+                          height: "10px",
+                          backgroundColor: "gray",
+                          cursor:
+                            direction === "top-left"
+                              ? "nw-resize"
+                              : direction === "top-right"
+                              ? "ne-resize"
+                              : direction === "bottom-left"
+                              ? "sw-resize"
+                              : "se-resize",
+                          top: direction.includes("top") ? -5 : "auto",
+                          bottom: direction.includes("bottom") ? -5 : "auto",
+                          left: direction.includes("left") ? -5 : "auto",
+                          right: direction.includes("right") ? -5 : "auto",
+                        }}
+                        onMouseDown={(e) => onResizeStart(e, el.id, direction)}
+                      />
+                    )
+                  )}
+                </div>
+              ) : (
+                <></>
+              )
+            )}
         </div>
       </div>
     </>

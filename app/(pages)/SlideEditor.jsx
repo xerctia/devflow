@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import TopBar from "../(components)/TopBar";
 import Toolbar from "../(components)/Toolbar";
 import Ruler from "../(components)/Ruler";
 import Sidebar from "../(components)/Sidebar";
 import MainArea from "../(components)/MainArea";
+import usePptStore from "../zustandStores/usePptStore";
+import useSlideStore from "../zustandStores/useSlideStore";
+import db from "../db";
 // import Head from "next/head";
 
-export default function SlideEditor() {
+export default function SlideEditor({ pptId }) {
   const [elements, setElements] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -16,10 +19,87 @@ export default function SlideEditor() {
   const [font, setFont] = useState("Poppins");
 
   // const [slides, setSlides] = useState([]);
+  const [activeSlide, setActiveSlide] = useState(null);
+
+  const { ppts } = usePptStore();
+  const { slides, loadSlides, newSlide } = useSlideStore();
+  const [currentPpt, setCurrentPpt] = useState(null);
+
+  const memoizedNewSlide = useCallback(newSlide, []);
+
+  useEffect(() => {
+    const findActivePpt = () => {
+      const curPpt = ppts.find((ppt) => ppt?.id === pptId);
+      setCurrentPpt(curPpt || null);
+
+      if (!curPpt) {
+        console.log("Presentation not found for ID:", pptId);
+      } else {
+        console.log("Presentation id found: ", pptId);
+      }
+    };
+
+    findActivePpt();
+  }, [ppts, pptId]);
+
+  useEffect(() => {
+    // Load slides asynchronously
+    const initializeSlides = async () => {
+      await loadSlides(pptId); // Load slides for the given pptId
+
+      const existingSlides = useSlideStore
+        .getState()
+        .slides.filter((slide) => slide.pptId === pptId);
+
+      console.log("Existing slides: ", existingSlides);
+
+      if (existingSlides.length === 0) {
+        // Add the first slide if none exist
+        const firstSlide = {
+          id: `slide-${Date.now()}`,
+          pptId,
+          bgcolor: "#fff",
+          name: `Slide ${existingSlides.length + 1}`,
+          slide_number: 1,
+        };
+        // Check if slide already exists to avoid adding it again
+        const slideExists = existingSlides.some(
+          (slide) => slide.name === firstSlide.name
+        );
+
+        if (!slideExists) {
+          memoizedNewSlide(firstSlide); // Add slide if it doesn't exist
+          setActiveSlide(firstSlide); // Set the first slide as active
+        } else {
+          console.log("Slide already exists, not adding duplicate.");
+        }
+      } else {
+        // Set the first slide as active
+        setActiveSlide(existingSlides[0]);
+      }
+    };
+
+    initializeSlides();
+  }, [pptId]);
+
+  // useEffect(() => {
+  //   async function fetchSlides() {
+  //     const persistedSlides = await db.slides.toArray();
+  //     if (persistedSlides.length > 0) {
+  //       loadSlides(persistedSlides); // Load slides into Zustand store
+  //     } else {
+  //       addSlide(); // Add a slide if no persisted slides are found
+  //     }
+  //   }
+  //   fetchSlides();
+  // }, []);
+
+  // useEffect(() => {
+  //   db.slides.bulkPut(slides); // Save all slides to IndexedDB
+  // }, [slides]);
 
   const uid = function () {
     var id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    console.log(id);
     return id;
   };
 
@@ -29,6 +109,7 @@ export default function SlideEditor() {
 
       var tempElem = {
         id: uid(), // Unique ID
+        slideId: activeSlide.id,
         type,
         x: 50,
         y: 50,
@@ -44,12 +125,36 @@ export default function SlideEditor() {
       };
 
       setSelected(tempElem);
+      console.log(tempElem.slideId);
+      console.log(activeSlide.slideId);
       return [
         ...prevElements.map((element) => ({ ...element, selected: false })),
         tempElem,
       ];
     });
   };
+
+  const addSlide = () => {
+    const tempSlide = {
+      id: `slide-${uid()}`, // Unique ID
+      pptId: pptId,
+      bgcolor: "#fff", // Default background color
+      name: `Slide ${slides.length + 1}`, // Default name
+      slide_number: slides.length + 1, // Slide number based on the array length
+    };
+
+    newSlide(tempSlide);
+    setActiveSlide(tempSlide);
+  };
+
+  // useEffect(() => {
+  //   const pptSlides = slides.filter((slide) => {
+  //     slide.pptId === pptId;
+  //   });
+  //   if (pptSlides.length === 0) {
+  //     addSlide(); // Adds the first slide and sets it as active
+  //   }
+  // }, [pptId]);
 
   const handleMouseDown = (e, id) => {
     e.preventDefault();
@@ -72,7 +177,7 @@ export default function SlideEditor() {
     setSelectedElement({ id, startX: e.clientX, startY: e.clientY });
 
     // Log the selected font after state update
-    console.log(selectedEl?.font || "No font selected");
+    console.log(`Active slide : ${activeSlide.name}`);
   };
 
   const handleMouseMove = (e) => {
@@ -139,10 +244,41 @@ export default function SlideEditor() {
       }
     };
 
+    const handleDoubleKeyDown = (e) => {
+      // Check if the target is a textarea or other input element
+      if (
+        e.target.tagName === "TEXTAREA" ||
+        e.target.tagName === "INPUT" ||
+        e.target.isContentEditable ||
+        e.altKey ||
+        e.shiftKey
+      ) {
+        return; // Ignore shortcuts if focused on editable content
+      }
+
+      e.preventDefault();
+
+      // Ctrl + D : Duplicate
+      if (e.ctrlKey && e.key.toUpperCase() === "D") {
+        if (selected) {
+          const duplicate = {
+            ...selected,
+            id: uid(),
+            x: selected.x + 10,
+            y: selected.y,
+          };
+
+          setElements((prevElements) => [...prevElements, duplicate]);
+        }
+      }
+    };
+
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleDoubleKeyDown);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleDoubleKeyDown);
     };
   }, [addElement]);
 
@@ -165,9 +301,16 @@ export default function SlideEditor() {
           setFont={setFont}
         />
         <div className="flex flex-1">
-          <Sidebar />
+          <Sidebar
+            // slides={slides}
+            addSlide={addSlide}
+            activeSlide={activeSlide}
+            setActiveSlide={setActiveSlide}
+          />
           <MainArea
             elements={elements}
+            // slides={slides}
+            activeSlide={activeSlide}
             color={color}
             font={font}
             setElements={setElements}

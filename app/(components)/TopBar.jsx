@@ -6,7 +6,9 @@ export default function TopBar() {
   return (
     <div className="flex items-center p-1 gap-6 border-b">
       <div className="flex items-center gap-2">
-        <div className="text-xl font-bold text-[#FFBE7A]">DevFlow</div>
+        <a href="/">
+          <div className="text-xl font-bold text-[#FFBE7A]">DevFlow</div>
+        </a>
         <span className="font-medium">slides.ppt</span>
         <Star className="h-4 w-4" />
         <Button variant="ghost" size="icon">
