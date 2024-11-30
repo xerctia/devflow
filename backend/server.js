@@ -21,7 +21,7 @@ app.use('/api/presentations', presentationRoutes);
 import { createConnection } from "@convex-dev/server";
 const db = createConnection(); 
 
-
+// creating the presentation with 1st slide
 export const createPresentation = mutation({
   args: { title: "string", description: "string" },
   handler: async (ctx, args) => {
@@ -35,6 +35,8 @@ export const createPresentation = mutation({
   }
 });
 
+
+// getting all the presentation
 export const getPresentations = query({
   handler: async (ctx) => {
     const presentations = await ctx.db.query("presentations").collect();
@@ -42,6 +44,8 @@ export const getPresentations = query({
   }
 });
 
+
+// getting presentation by ID
 export const getPresentationById = query({
   args: { id: "string" },
   handler: async (ctx, args) => {
@@ -51,7 +55,7 @@ export const getPresentationById = query({
 });
 
 
-
+// updating tyhe presenation
 export const updatePresentation = mutation({
   args: { id: "string", title: "string", description: "string" },
   handler: async (ctx, args) => {
