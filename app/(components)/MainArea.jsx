@@ -3,6 +3,7 @@
 import Head from "next/head";
 import React, { useCallback, useEffect, useState } from "react";
 import useSlideStore from "../zustandStores/useSlideStore";
+import useElementStore from "../zustandStores/useElementStore";
 
 const DynamicFontLoader = ({ font }) => {
   useEffect(() => {
@@ -36,8 +37,8 @@ const DynamicFontLoader = ({ font }) => {
 };
 
 export default function MainArea({
-  elements,
-  setElements,
+  // elements,
+  // setElements,
   // slides,
   activeSlide,
   color,
@@ -53,6 +54,7 @@ export default function MainArea({
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
   const { slides } = useSlideStore();
+  const {elements, newElement, updateElement, remElement} = useElementStore();
 
   const onResizeStart = useCallback((e, id, direction) => {
     e.stopPropagation();
@@ -68,50 +70,94 @@ export default function MainArea({
       const dx = e.clientX - startPos.x;
       const dy = e.clientY - startPos.y;
 
-      setElements((prev) => {
-        const updatedElements = prev.map((el) => {
-          if (el.id !== resizingElement) return el;
+      // setElements((prev) => {
+      //   const updatedElements = prev.map((el) => {
+      //     if (el.id !== resizingElement) return el;
 
-          const updatedElement = { ...el };
+      //     const updatedElement = { ...el };
 
-          if (resizeDirection.includes("right")) {
-            updatedElement.width = Math.max(1, el.width + dx);
-          }
-          if (resizeDirection.includes("left")) {
-            const newWidth = Math.max(1, el.width - dx);
-            updatedElement.x = el.x + (el.width - newWidth);
-            updatedElement.width = newWidth;
-          }
-          if (resizeDirection.includes("bottom")) {
-            updatedElement.height = Math.max(1, el.height + dy);
-          }
-          if (resizeDirection.includes("top")) {
-            const newHeight = Math.max(1, el.height - dy);
-            updatedElement.y = el.y + (el.height - newHeight);
-            updatedElement.height = newHeight;
-          }
+      //     if (resizeDirection.includes("right")) {
+      //       updatedElement.width = Math.max(1, el.width + dx);
+      //     }
+      //     if (resizeDirection.includes("left")) {
+      //       const newWidth = Math.max(1, el.width - dx);
+      //       updatedElement.x = el.x + (el.width - newWidth);
+      //       updatedElement.width = newWidth;
+      //     }
+      //     if (resizeDirection.includes("bottom")) {
+      //       updatedElement.height = Math.max(1, el.height + dy);
+      //     }
+      //     if (resizeDirection.includes("top")) {
+      //       const newHeight = Math.max(1, el.height - dy);
+      //       updatedElement.y = el.y + (el.height - newHeight);
+      //       updatedElement.height = newHeight;
+      //     }
 
-          if (isCtrlPressed && el.type === "rectangle") {
-            const maxChange = Math.max(
-              Math.abs(updatedElement.width - el.width),
-              Math.abs(updatedElement.height - el.height)
-            );
-            updatedElement.width = el.width + Math.sign(dx) * maxChange;
-            updatedElement.height = el.height + Math.sign(dy) * maxChange;
-          }
+      //     if (isCtrlPressed && el.type === "rectangle") {
+      //       const maxChange = Math.max(
+      //         Math.abs(updatedElement.width - el.width),
+      //         Math.abs(updatedElement.height - el.height)
+      //       );
+      //       updatedElement.width = el.width + Math.sign(dx) * maxChange;
+      //       updatedElement.height = el.height + Math.sign(dy) * maxChange;
+      //     }
 
-          return updatedElement;
-        });
+      //     return updatedElement;
+      //   });
 
-        // Update `selected` element
-        const updatedSelected = updatedElements.find(
-          (el) => el.id === resizingElement
-        );
-        if (updatedSelected) {
-          setSelected(updatedSelected);
-        }
+      //   // Update `selected` element
+      //   const updatedSelected = updatedElements.find(
+      //     (el) => el.id === resizingElement
+      //   );
+      //   if (updatedSelected) {
+      //     setSelected(updatedSelected);
+      //   }
 
-        return updatedElements;
+      //   return updatedElements;
+      // });
+
+      const updatedElement = elements.find((el) => el.id === resizingElement)
+      if (!updateElement) return;
+
+      let newWidth = updatedElement.width;
+      let newHeight = updatedElement.height;
+      let newX = updatedElement.x;
+      let newY = updatedElement.y;
+
+      // Handle resizing in different directions
+      if (resizeDirection.includes("right")) {
+        newWidth = Math.max(1, updatedElement.width + dx);
+      }
+      if (resizeDirection.includes("left")) {
+        const widthChange = updatedElement.width - newWidth;
+        newX = updatedElement.x + widthChange;
+        newWidth = Math.max(1, updatedElement.width - dx);
+      }
+      if (resizeDirection.includes("bottom")) {
+        newHeight = Math.max(1, updatedElement.height + dy);
+      }
+      if (resizeDirection.includes("top")) {
+        const heightChange = updatedElement.height - newHeight;
+        newY = updatedElement.y + heightChange;
+        newHeight = Math.max(1, updatedElement.height - dy);
+      }
+
+      // Maintain aspect ratio when Ctrl is pressed (if resizing is rectangle)
+      // if (isCtrlPressed && updatedElement.type === "rectangle") {
+      //   const maxChange = Math.max(
+      //     Math.abs(newWidth - updatedElement.width),
+      //     Math.abs(newHeight - updatedElement.height)
+      //   );
+      //   newWidth = updatedElement.width + Math.sign(dx) * maxChange;
+      //   newHeight = updatedElement.height + Math.sign(dy) * maxChange;
+      // }
+
+      // Update element using updateElement from Zustand
+      updateElement(resizingElement, {
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
       });
 
       setStartPos({ x: e.clientX, y: e.clientY });
@@ -158,25 +204,18 @@ export default function MainArea({
   }, [resizingElement, onResizeMove, onResizeEnd]);
 
   useEffect(() => {
-    setElements((prevElements) =>
-      prevElements.map((el) => ({
-        ...el,
-        bgColor: el.selected ? color : el.bgColor, // Update color only for selected elements
-      }))
-    );
-  }, [color]);
+    elements.forEach((el) => {
+      if (el.selected) {
+        updateElement(el.id, { bgColor: color }); // Update only the selected element's bgColor
+      }
+    });
+  }, [color, elements, updateElement]);
 
   const handleDoubleClick = (id) => {
-    setElements((prevElements) =>
-      prevElements.map((el) =>
-        el.id === id
-          ? {
-              ...el,
-              text: el.text || "Edit me!", // Add a default text if none exists
-            }
-          : el
-      )
-    );
+    const element = elements.find((el) => el.id===id);
+    if (element) {
+      updateElement(id, {text: element.text || "Edit me!"})
+    }
   };
 
   // const handleColorChange = (newColor) => {
@@ -205,12 +244,9 @@ export default function MainArea({
   // };
 
   const handleDeSelect = () => {
-    setElements((prevElements) => {
-      if (!prevElements || !Array.isArray(prevElements)) {
-        return [];
-      }
-      return prevElements.map((element) => ({ ...element, selected: false }));
-    });
+    elements.forEach((el) => {
+      updateElement(el.id, {selected: false})
+    })
 
     setSelected(null);
     // setSelectedElement(null);
@@ -218,6 +254,8 @@ export default function MainArea({
 
   const handleElementClick = (id) => {
     const element = elements.find((el) => el.id === id);
+    updateElement(id, {selected: true})
+
     setSelected(element);
   };
 
@@ -294,7 +332,9 @@ export default function MainArea({
                   // onClick={(e) => selectElement(e, el.id)}
                   onDoubleClick={() => {
                     if (el.type === "rectangle" || el.type === "ellipse") {
-                      handleDoubleClick(el.id);
+                      if (el.text !== undefined) {
+                        handleDoubleClick(el.id);
+                      }
                     }
                   }}
                   onMouseDown={(e) => {

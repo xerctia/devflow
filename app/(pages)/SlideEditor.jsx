@@ -9,10 +9,11 @@ import MainArea from "../(components)/MainArea";
 import usePptStore from "../zustandStores/usePptStore";
 import useSlideStore from "../zustandStores/useSlideStore";
 import db from "../db";
+import useElementStore from "../zustandStores/useElementStore";
 // import Head from "next/head";
 
 export default function SlideEditor({ pptId }) {
-  const [elements, setElements] = useState([]);
+  // const [elements, setElements] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selected, setSelected] = useState(null);
   const [color, setColor] = useState("#FFBE7A");
@@ -23,9 +24,16 @@ export default function SlideEditor({ pptId }) {
 
   const { ppts } = usePptStore();
   const { slides, loadSlides, newSlide } = useSlideStore();
+  const {elements, loadElements, newElement, updateElement, remElement} = useElementStore();
+  
   const [currentPpt, setCurrentPpt] = useState(null);
 
   const memoizedNewSlide = useCallback(newSlide, []);
+
+  const uid = function () {
+    var id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return id;
+  };
 
   useEffect(() => {
     const findActivePpt = () => {
@@ -56,7 +64,7 @@ export default function SlideEditor({ pptId }) {
       if (existingSlides.length === 0) {
         // Add the first slide if none exist
         const firstSlide = {
-          id: `slide-${Date.now()}`,
+          id: `slide-${uid()}`,
           pptId,
           bgcolor: "#fff",
           name: `Slide ${existingSlides.length + 1}`,
@@ -68,7 +76,7 @@ export default function SlideEditor({ pptId }) {
         );
 
         if (!slideExists) {
-          memoizedNewSlide(firstSlide); // Add slide if it doesn't exist
+          await memoizedNewSlide(firstSlide); // Add slide if it doesn't exist
           setActiveSlide(firstSlide); // Set the first slide as active
         } else {
           console.log("Slide already exists, not adding duplicate.");
@@ -98,40 +106,30 @@ export default function SlideEditor({ pptId }) {
   //   db.slides.bulkPut(slides); // Save all slides to IndexedDB
   // }, [slides]);
 
-  const uid = function () {
-    var id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    return id;
-  };
+  
 
   const addElement = (type) => {
-    setElements((prevElements) => {
-      if (!prevElements) return [];
+    const newElem = {
+      id: uid(), // Unique ID
+      slideId: activeSlide.id,
+      type,
+      x: 50,
+      y: 50,
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      fontSize: 20,
+      font: font || "Poppins",
+      bgColor: color,
+      textColor: "#000",
+      selected: true,
+      text: type === "text" ? "Enter text" : "",
+    };
 
-      var tempElem = {
-        id: uid(), // Unique ID
-        slideId: activeSlide.id,
-        type,
-        x: 50,
-        y: 50,
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-        fontSize: 20,
-        font: font || "Poppins",
-        bgColor: color,
-        textColor: "#000",
-        selected: true,
-        text: type === "text" ? "Enter text" : "",
-      };
-
-      setSelected(tempElem);
-      console.log(tempElem.slideId);
-      console.log(activeSlide.slideId);
-      return [
-        ...prevElements.map((element) => ({ ...element, selected: false })),
-        tempElem,
-      ];
-    });
+    newElement(newElem); // Add the new element to the Zustand store
+    setSelected(newElem); // Set the selected element
+    console.log(newElem.slideId);
+    console.log(activeSlide.slideId);
   };
 
   const addSlide = () => {
@@ -156,42 +154,52 @@ export default function SlideEditor({ pptId }) {
   //   }
   // }, [pptId]);
 
+  // const handleMouseDown = (e, id) => {
+  //   e.preventDefault();
+
+  //   setElements((prevElements) => {
+  //     // Update the elements array, marking only the clicked element as selected
+  //     return prevElements.map((element) => ({
+  //       ...element,
+  //       selected: element.id === id,
+  //     }));
+  //   });
+
+  //   // Find the selected element and update the `selected` state
+  //   const selectedEl = elements.find((element) => element.id === id);
+  //   if (selectedEl) {
+  //     setSelected(selectedEl); // Set the selected element in state
+  //   }
+
+  //   // Optionally set additional properties for dragging or other purposes
+  //   setSelectedElement({ id, startX: e.clientX, startY: e.clientY });
+
+  //   // Log the selected font after state update
+  //   console.log(`Active slide : ${activeSlide.name}`);
+  // };
   const handleMouseDown = (e, id) => {
     e.preventDefault();
 
-    setElements((prevElements) => {
-      // Update the elements array, marking only the clicked element as selected
-      return prevElements.map((element) => ({
-        ...element,
-        selected: element.id === id,
-      }));
-    });
-
-    // Find the selected element and update the `selected` state
+    // Select the element
     const selectedEl = elements.find((element) => element.id === id);
     if (selectedEl) {
       setSelected(selectedEl); // Set the selected element in state
+      updateElement(id, {selected: true})
     }
 
-    // Optionally set additional properties for dragging or other purposes
-    setSelectedElement({ id, startX: e.clientX, startY: e.clientY });
-
-    // Log the selected font after state update
-    console.log(`Active slide : ${activeSlide.name}`);
+    setSelectedElement({ id, startX: e.clientX, startY: e.clientY, initialX: selected.x, initialY: selected.y });
   };
 
   const handleMouseMove = (e) => {
     if (!selectedElement) return;
+
     const dx = e.clientX - selectedElement.startX;
     const dy = e.clientY - selectedElement.startY;
 
-    setElements((prevElements) =>
-      prevElements.map((el) =>
-        el.id === selectedElement.id
-          ? { ...el, x: el.x + dx, y: el.y + dy }
-          : el
-      )
-    );
+    const newX = selectedElement.initialX + dx;
+    const newY = selectedElement.initialY + dy;
+
+    updateElement(selectedElement.id, { x: newX, y: newY });
 
     setSelectedElement((prev) => ({
       ...prev,
@@ -205,9 +213,7 @@ export default function SlideEditor({ pptId }) {
   };
 
   const handleTextChange = (id, text) => {
-    setElements((prevElements) =>
-      prevElements.map((el) => (el.id === id ? { ...el, text } : el))
-    );
+    updateElement(id, { text });
   };
 
   useEffect(() => {
@@ -237,10 +243,8 @@ export default function SlideEditor({ pptId }) {
       }
 
       if (!!selected && e.key === "Delete") {
-        setElements((prev) => prev.filter((el) => el.id !== selected.id));
-        setSelected((prevSelected) =>
-          prevSelected?.id === selected.id ? null : prevSelected
-        );
+        remElement(selected.id); // Remove the selected element from the store
+        setSelected(null);
       }
     };
 
@@ -268,7 +272,7 @@ export default function SlideEditor({ pptId }) {
             y: selected.y,
           };
 
-          setElements((prevElements) => [...prevElements, duplicate]);
+          addElement(duplicate);
         }
       }
     };
@@ -292,7 +296,7 @@ export default function SlideEditor({ pptId }) {
         <TopBar />
         <Toolbar
           addElement={addElement}
-          setElements={setElements}
+          // setElements={setElements}
           selected={selected}
           setSelected={setSelected}
           color={color}
@@ -308,12 +312,12 @@ export default function SlideEditor({ pptId }) {
             setActiveSlide={setActiveSlide}
           />
           <MainArea
-            elements={elements}
+            // elements={elements}
             // slides={slides}
             activeSlide={activeSlide}
             color={color}
             font={font}
-            setElements={setElements}
+            // setElements={setElements}
             setSelected={setSelected}
             onMouseDown={handleMouseDown}
             onTextChange={handleTextChange}
