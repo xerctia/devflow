@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import TopBar from "../(components)/TopBar";
 import Toolbar from "../(components)/Toolbar";
 import Ruler from "../(components)/Ruler";
@@ -177,6 +177,9 @@ export default function SlideEditor({ pptId }) {
   //   // Log the selected font after state update
   //   console.log(`Active slide : ${activeSlide.name}`);
   // };
+
+  const dragref = useRef({});
+  
   const handleMouseDown = (e, id) => {
     e.preventDefault();
 
@@ -187,30 +190,85 @@ export default function SlideEditor({ pptId }) {
       updateElement(id, {selected: true})
     }
 
-    setSelectedElement({ id, startX: e.clientX, startY: e.clientY, initialX: selected.x, initialY: selected.y });
+    setSelectedElement({ id, startX: e.clientX + (selectedEl.width/2), startY: e.clientY+ (selectedEl.height/2), initialX: selectedEl.x, initialY: selectedEl.y });
+    dragref.current = { startX: e.clientX + (selectedEl.width/2), startY: e.clientY + (selectedEl.height/2), initialX: selectedEl.x, initialY: selectedEl.y }
   };
 
   const handleMouseMove = (e) => {
     if (!selectedElement) return;
 
-    const dx = e.clientX - selectedElement.startX;
-    const dy = e.clientY - selectedElement.startY;
+    const dx = e.clientX - dragref.current.startX;
+    const dy = e.clientY - dragref.current.startY;
 
-    const newX = selectedElement.initialX + dx;
-    const newY = selectedElement.initialY + dy;
+    const newX = dragref.current.initialX + dx;
+    const newY = dragref.current.initialY + dy;
 
-    updateElement(selectedElement.id, { x: newX, y: newY });
+    const element = document.getElementById(`element-${selectedElement.id}`);
+    if (element) {
+      // console.log('Element found!')
+      element.style.transform = `translate(${newX}px, ${newY}px)`;
+    }
 
-    setSelectedElement((prev) => ({
-      ...prev,
-      startX: e.clientX,
-      startY: e.clientY,
-    }));
+    // updateElement(selectedElement.id, { x: newX, y: newY });
+
+    // setSelectedElement((prev) => ({
+    //   ...prev,
+    //   startX: e.clientX,
+    //   startY: e.clientY,
+    //   initialX: newX,
+    //   initialY: newY,
+    // }));
+
+    // setSelected((prev) => ({
+    //   ...prev,
+    //   x: newX,
+    //   y: newY,
+    // }));
   };
 
   const handleMouseUp = () => {
+    if (!selectedElement) return;
+
+    const dx = dragref.current.startX - selectedElement.startX;
+    const dy = dragref.current.startY - selectedElement.startY;
+
+    // Finalize the element position in state
+    updateElement(selectedElement.id, {
+      initialX: dragref.current.initialX + dx,
+      initialY: dragref.current.initialY + dy,
+    });
+    
     setSelectedElement(null);
   };
+
+  // const handleMouseMove = (e) => {
+  //   if (!selectedElement) return;
+  
+  //   // Use ref to store the current dragging position
+  //   const dx = e.clientX - selectedElement.startX;
+  //   const dy = e.clientY - selectedElement.startY;
+  
+  //   const newX = selectedElement.initialX + dx;
+  //   const newY = selectedElement.initialY + dy;
+  
+  //   // Directly move the element without updating state
+  //   const element = document.getElementById(`element-${selectedElement.id}`);
+  //   if (element) {
+  //     element.style.transform = `translate(${newX}px, ${newY}px)`;
+  //   }
+  // };
+  
+  // const handleMouseUp = () => {
+  //   if (!selectedElement) return;
+  
+  //   // Finalize position in the state after dragging ends
+  //   updateElement(selectedElement.id, {
+  //     x: selectedElement.initialX + dx,
+  //     y: selectedElement.initialY + dy,
+  //   });
+  
+  //   setSelectedElement(null); // Reset selection
+  // };
 
   const handleTextChange = (id, text) => {
     updateElement(id, { text });

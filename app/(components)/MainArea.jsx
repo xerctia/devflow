@@ -1,7 +1,7 @@
 "use client";
 
 import Head from "next/head";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import useSlideStore from "../zustandStores/useSlideStore";
 import useElementStore from "../zustandStores/useElementStore";
 
@@ -54,23 +54,15 @@ export default function MainArea({
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
   const { slides } = useSlideStore();
-  const {elements, newElement, updateElement, remElement} = useElementStore();
+  const {elements, loadElements, newElement, updateElement, remElement} = useElementStore();
 
-  const onResizeStart = useCallback((e, id, direction) => {
-    e.stopPropagation();
-    setResizingElement(id);
-    setResizeDirection(direction);
-    setStartPos({ x: e.clientX, y: e.clientY });
-  }, []);
+  useEffect(() => {
+    if (activeSlide) {
+      loadElements(activeSlide.id);
+    }
+  }, [activeSlide, loadElements]);
 
-  const onResizeMove = useCallback(
-    (e) => {
-      if (!resizingElement || !resizeDirection) return;
-
-      const dx = e.clientX - startPos.x;
-      const dy = e.clientY - startPos.y;
-
-      // setElements((prev) => {
+  // setElements((prev) => {
       //   const updatedElements = prev.map((el) => {
       //     if (el.id !== resizingElement) return el;
 
@@ -116,31 +108,120 @@ export default function MainArea({
       //   return updatedElements;
       // });
 
-      const updatedElement = elements.find((el) => el.id === resizingElement)
-      if (!updateElement) return;
+      const resizeRef = useRef(null);
+      
+  const onResizeStart = useCallback((e, id, direction) => {
+    e.stopPropagation();
+    setResizingElement(id);
+    setResizeDirection(direction);
 
-      let newWidth = updatedElement.width;
-      let newHeight = updatedElement.height;
-      let newX = updatedElement.x;
-      let newY = updatedElement.y;
+    const elementNode = document.getElementById(`element-${id}`);
+    if (!elementNode) return;
+
+    resizeRef.current = elementNode;
+    
+    setStartPos({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const onResizeMove = useCallback(
+    (e) => {
+      if (!resizingElement || !resizeDirection) return;
+
+      const dx = e.clientX - startPos.x;
+      const dy = e.clientY - startPos.y;
+
+      // const updatedElement = elements.find((el) => el.id === resizingElement)
+      // if (!updateElement) return;
+
+      // let newWidth = updatedElement.width;
+      // let newHeight = updatedElement.height;
+      // let newX = updatedElement.x;
+      // let newY = updatedElement.y;
+
+      // Extract the current width and height from the element
+    // let { width, height, x, y } = updatedElement;
 
       // Handle resizing in different directions
+      // if (resizeDirection.includes("right")) {
+      //   newWidth = Math.max(1, updatedElement.width + dx);
+      // }
+      // if (resizeDirection.includes("left")) {
+        
+      //   newWidth = Math.max(1, updatedElement.width - dx);
+      //   const widthChange = updatedElement.width - newWidth;
+      //   newX = updatedElement.x + widthChange;
+      // }
+      // if (resizeDirection.includes("bottom")) {
+      //   newHeight = Math.max(1, updatedElement.height + dy);
+      // }
+      // if (resizeDirection.includes("top")) {
+        
+      //   newHeight = Math.max(1, updatedElement.height - dy);
+      //   const heightChange = updatedElement.height - newHeight;
+      //   newY = updatedElement.y + heightChange;
+      // }
+
+      const elementNode = resizeRef.current;
+      if (!elementNode) return;
+
+      console.log("Element found")
+
+      // Extract current dimensions and position
+      const rect = elementNode.getBoundingClientRect();
+      let { width, height, left, top } = rect;
+  
+      // Calculate new dimensions and positions
       if (resizeDirection.includes("right")) {
-        newWidth = Math.max(1, updatedElement.width + dx);
+        width = Math.max(1, width + dx);
       }
       if (resizeDirection.includes("left")) {
-        const widthChange = updatedElement.width - newWidth;
-        newX = updatedElement.x + widthChange;
-        newWidth = Math.max(1, updatedElement.width - dx);
+        const deltaWidth = Math.max(1, width - dx);
+        left = left + (width - deltaWidth);
+        width = deltaWidth;
       }
       if (resizeDirection.includes("bottom")) {
-        newHeight = Math.max(1, updatedElement.height + dy);
+        height = Math.max(1, height + dy);
       }
       if (resizeDirection.includes("top")) {
-        const heightChange = updatedElement.height - newHeight;
-        newY = updatedElement.y + heightChange;
-        newHeight = Math.max(1, updatedElement.height - dy);
+        const deltaHeight = Math.max(1, height - dy);
+        top = top + (height - deltaHeight);
+        height = deltaHeight;
       }
+
+      if (resizeDirection.includes("top") && resizeDirection.includes("left")) {
+        const newWidth = Math.max(1, width - dx);
+        const newHeight = Math.max(1, height - dy);
+        left = left + (width - newWidth); // Pin left edge
+        top = top + (height - newHeight); // Pin top edge
+        width = newWidth;
+        height = newHeight;
+      }
+      
+      if (resizeDirection.includes("top") && resizeDirection.includes("right")) {
+        height = Math.max(1, height - dy); // Shrink height upwards
+        top = top + dy; // Adjust top position
+        width = Math.max(1, width + dx); // Increase width to the right
+      }
+      
+      if (resizeDirection.includes("bottom") && resizeDirection.includes("left")) {
+        width = Math.max(1, width - dx); // Shrink width towards the left
+        left = left + dx; // Adjust left position
+        height = Math.max(1, height + dy); // Increase height towards the bottom
+      }
+      
+      if (resizeDirection.includes("bottom") && resizeDirection.includes("right")) {
+        width = Math.max(1, width + dx); // Increase width towards the right
+        height = Math.max(1, height + dy); // Increase height towards the bottom
+      }
+  
+      // Apply new dimensions and position directly to the DOM
+      elementNode.style.width = `${width}px`;
+      elementNode.style.height = `${height}px`;
+      // elementNode.style.left = `${left}px`;
+      // elementNode.style.top = `${top}px`;
+
+    // Update the element in the Zustand store
+    // updateElement(resizingElement, { x, y, width, height });
 
       // Maintain aspect ratio when Ctrl is pressed (if resizing is rectangle)
       // if (isCtrlPressed && updatedElement.type === "rectangle") {
@@ -152,13 +233,21 @@ export default function MainArea({
       //   newHeight = updatedElement.height + Math.sign(dy) * maxChange;
       // }
 
+      // setSelected((prev) => ({
+      //   ...prev,
+      //   x: newX,
+      //   y: newY,
+      //   width: newWidth,
+      //   height: newHeight,
+      // }));
+      
       // Update element using updateElement from Zustand
-      updateElement(resizingElement, {
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight,
-      });
+      // updateElement(resizingElement, {
+      //   x: newX,
+      //   y: newY,
+      //   width: newWidth,
+      //   height: newHeight,
+      // });
 
       setStartPos({ x: e.clientX, y: e.clientY });
     },
@@ -166,9 +255,31 @@ export default function MainArea({
   );
 
   const onResizeEnd = useCallback(() => {
-    setResizingElement(null);
-    setResizeDirection(null);
-  }, []);
+    if (!resizingElement) return;
+
+  // Get the final dimensions and positions from the DOM
+  const elementNode = resizeRef.current;
+  if (!elementNode) return;
+
+  const { width, height, left, top } = elementNode.getBoundingClientRect();
+
+  // Update Zustand store with final values
+  updateElement(resizingElement, {
+    // width: Math.round(width),
+    // height: Math.round(height),
+    // x: Math.round(left),
+    // y: Math.round(top),
+    width: width,
+    height: height,
+    // x: left,
+    // y: top,
+  });
+
+  // Reset resizing state
+  resizeRef.current = null;
+  setResizingElement(null);
+  setResizeDirection(null);
+  }, [resizingElement, updateElement]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -298,6 +409,7 @@ export default function MainArea({
               el.slideId === activeSlide.id ? (
                 <div
                   key={el.id}
+                  id={`element-${el.id}`}
                   style={{
                     position: "absolute",
                     left: el.x,
