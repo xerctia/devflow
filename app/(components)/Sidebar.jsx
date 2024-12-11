@@ -1,5 +1,5 @@
-import { Plus } from "lucide-react";
-import React from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import useSlideStore from "../zustandStores/useSlideStore";
 
 export default function Sidebar({
@@ -8,13 +8,41 @@ export default function Sidebar({
   setActiveSlide,
   activeSlide,
 }) {
-  const { slides, newSlide } = useSlideStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingSlideId, setEditingSlideId] = useState(null);
+  const [sName, setsName] = useState("")
+  
+  const { slides, remSlide, updateSlide } = useSlideStore();
+
+  const handleNameEdit = (slide) => {
+    setEditingSlideId(slide.id);
+    setsName(slide.name);
+  }
+
+  const handleNameSave = async (slide) => {
+    await updateSlide(slide.id, {name: sName});
+    setEditingSlideId(null)
+  }
+
+  const handleEnterPress = (e, slide) => {
+    if (e.key === "Enter") {
+      handleNameSave(slide);
+    }
+  }
 
   const selectSlide = (id) => {
     const selectedSlide = slides.find((slide) => id === slide.id);
     setActiveSlide(selectedSlide);
     // console.log("slide changed to ", activeSlide.name);
   };
+
+  const handleDelSlide = async (e, slide) => {
+    console.log("Deleting slide")
+    console.log(slide)
+    if (e.key === "Delete") {
+      await remSlide(slide.id);
+    }
+  }
 
   if (!slides || !activeSlide) {
     return <div>Loading...</div>; // Optional loading indicator
@@ -28,11 +56,33 @@ export default function Sidebar({
           onClick={() => {
             selectSlide(slide.id);
           }}
-          className={`mb-2 p-2 bg-white border rounded-lg aspect-video flex items-center justify-center hover:border-[#FFBE7A] ${
+          onKeyDown={(e) => handleDelSlide(e, slide)}
+          className={`mb-2 p-2 bg-white border rounded-lg aspect-video relative flex items-center justify-center hover:border-[#FFBE7A] ${
             slide.id === activeSlide?.id ? "border-[#FFBE7A]" : ""
           } cursor-pointer`}
         >
-          {slide.name}
+          <div className="absolute top-[10%] left-[7%] flex items-center gap-2">
+            <Pencil className="h-3 w-3" onClick={(e) => handleNameEdit(slide)} />
+            <Trash2 className="h-3 w-3" onClick={(e) => remSlide(slide.id)} />
+          </div>
+          {editingSlideId === slide.id ? (
+            <input
+              type="text"
+              value={sName}
+              onChange={(e) => setsName(e.target.value)}
+              onBlur={() => handleNameSave(slide)} // Save on blur
+              onKeyDown={(e) => handleEnterPress(e, slide)} // Save on Enter
+              autoFocus
+              className="max-w-32 bg-[#FFBE7A]/10 border-none outline-none rounded-md px-2 py-2 text-center"
+            />
+          ) : (
+            <span
+              className="font-medium"
+              onDoubleClick={() => handleNameEdit(slide)} // Enable edit on double-click
+            >
+              {slide.name}
+            </span>
+          )}
         </div>
       ))}
 

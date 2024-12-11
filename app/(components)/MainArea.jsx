@@ -314,13 +314,13 @@ export default function MainArea({
     };
   }, [resizingElement, onResizeMove, onResizeEnd]);
 
-  useEffect(() => {
-    elements.forEach((el) => {
-      if (el.selected) {
-        updateElement(el.id, { bgColor: color }); // Update only the selected element's bgColor
-      }
-    });
-  }, [color, elements, updateElement]);
+  // useEffect(() => {
+  //   elements.forEach((el) => {
+  //     if (el.selected) {
+  //       updateElement(el.id, { bgColor: color }); // Update only the selected element's bgColor
+  //     }
+  //   });
+  // }, [color, elements, updateElement]);
 
   const handleDoubleClick = (id) => {
     const element = elements.find((el) => el.id===id);
@@ -424,20 +424,10 @@ export default function MainArea({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    // border:
-                    //   el.type === "text"
-                    //     ? "none"
-                    //     : el.type === "triangle"
-                    //     ? "none"
-                    //     : "1px solid #FFBE7A",
                     border: "none",
                     borderRadius:
                       el.type === "ellipse" ? "50%" : el.borderRadius,
-                    // backgroundColor:
-                    //   el.type !== "text" && el.type !== "triangle"
-                    //     ? "#FFBE7A"
-                    //     : "transparent",
-                    backgroundColor: el.text ? "transparent" : el.bgColor,
+                    backgroundColor: el.bgColor,
                     color: el.textColor || "#000",
                     cursor: "move",
                   }}

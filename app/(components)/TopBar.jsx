@@ -10,28 +10,21 @@ import { useParams } from "next/navigation";
 export default function TopBar({currPpt}) {
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [curPpt, setCurPpt] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [pName, setpName] = useState(currPpt?.name);
 
   const {pId} = useParams();
   
-  const {ppts, loadPpts} = usePptStore();
+  const {ppts, loadPpts, updatePpt} = usePptStore();
   const {slides} = useSlideStore();
   const {allElements, loadElementsForPpt} = useElementStore();
 
-  // useEffect(() => {
-  //   const findActivePpt = async () => {
-  //     await loadPpts();
-  //     const cur_Ppt = ppts.find((ppt) => ppt?.id === pId);
-  //     setCurPpt(cur_Ppt || null);
-
-  //     if (!cur_Ppt) {
-  //       console.log("Presentation not found for ID:", pId);
-  //     } else {
-  //       // console.log("Presentation id found: ", pId);
-  //     }
-  //   };
-
-  //   findActivePpt();
-  // }, [ppts, pId]);
+  const saveName = () => {
+    if (pName.trim() && pName !== currPpt?.name) {
+      updatePpt(currPpt.id, {name: pName});
+    }
+    setIsEditing(false);
+  }
 
   useEffect(() => {
     if (pId) {
@@ -63,23 +56,42 @@ export default function TopBar({currPpt}) {
     <div className="flex items-center p-1 gap-6 border-b">
       <div className="flex items-center gap-2">
         <a href="/">
-          <div className="text-xl font-bold text-[#FFBE7A]">DevFlow</div>
+          <div className="text-xl font-bold text-[#FFBE7A] hover:text-[#ea9b47]">DevFlow</div>
         </a>
-        <span className="font-medium">slides.ppt</span>
-        <Star className="h-4 w-4" />
-        <Button variant="ghost" size="icon">
-          <Grid className="h-4 w-4" />
+        {isEditing ? (
+        <input
+          type="text"
+          value={pName}
+          onChange={(e) => setpName(e.target.value)}
+          onBlur={saveName} // Save when clicking out
+          onKeyDown={(e) => e.key === "Enter" && saveName()} // Save on Enter
+          autoFocus
+          className="border border-gray-300 py-1 outline-none rounded px-2 max-w-40 text-sm"
+        />
+      ) : (
+        <Button variant="ghost">
+          <span
+            className="font-medium cursor-pointer"
+            onClick={() => setIsEditing(true)}
+          >
+            {currPpt?.name}.ppt
+          </span>
         </Button>
-        <Button variant="ghost" size="icon">
-          <Link className="h-4 w-4" />
+      )}
+        
+        <Button variant="ghost" asChild>
+          <div className="flex gap-2">
+            <Link className="h-4 w-4" />
+            <span className="cursor-pointer" onClick={handleExportClick}>Export</span>
+          </div>
         </Button>
       </div>
-      <div className="flex gap-4 text-sm">
+      {/* <div className="flex gap-4 text-sm"> */}
         {/* <span className="cursor-pointer">File</span>
         <span className="cursor-pointer">Edit</span>
         <span className="cursor-pointer">View</span> */}
-        <span className="cursor-pointer" onClick={handleExportClick}>Export</span>
-      </div>
+        
+      {/* </div> */}
     </div>
 
         {/* Modal */}
@@ -100,7 +112,7 @@ export default function TopBar({currPpt}) {
             </pre>
 
             <DialogFooter>
-              <Button variant="ghost" onClick={closeModal}>Cancel</Button>
+              <Button variant="ghost" className="outline-none border-none" onClick={closeModal}>Cancel</Button>
               <Button
                 variant="default"
                 onClick={() => {

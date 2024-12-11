@@ -121,7 +121,7 @@ export default function SlideEditor({ pptId }) {
       borderRadius: 8,
       fontSize: 20,
       font: font || "Poppins",
-      bgColor: color,
+      bgColor: '#FFBE7A',
       textColor: "#000",
       selected: true,
       text: type === "text" ? "Enter text" : "",

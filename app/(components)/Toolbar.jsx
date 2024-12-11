@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import ShapeButton from "./ShapeButton";
 import Select from "react-select";
+import useElementStore from "../zustandStores/useElementStore";
 
 export default function Toolbar({
   addElement,
@@ -32,27 +33,23 @@ export default function Toolbar({
   setColor,
   font,
   setFont,
-  setElements,
+  // setElements,
 }) {
   const [fonts, setFonts] = useState([]);
 
+  const {updateElement} = useElementStore();
+
   const handleColorChange = (e) => {
-    setColor(e.target.value);
-    console.log("Selected color:", e.target.value);
+    // setColor(e.target.value);
+    // console.log("Selected color:", e.target.value);
+    setSelected((prev) => ({...prev, bgColor: e.target.value}))
+    updateElement(selected.id, {bgColor: e.target.value})
   };
 
   const handleTextColorChange = (e) => {
-    setElements((prevElements) => {
-      if (!prevElements) return [];
+    if (!selected) return;
 
-      return prevElements.map((el) => {
-        if (el.id === selected.id) {
-          return { ...el, textColor: e.target.value };
-        } else {
-          return el;
-        }
-      });
-    });
+    updateElement(selected.id, {textColor: e.target.value})
   };
 
   const handleWidthChange = (newWidth) => {
@@ -69,11 +66,7 @@ export default function Toolbar({
       setSelected((prev) => ({ ...prev, width: parsedWidth }));
 
       // Update the element in the list
-      setElements((prevElements) => {
-        return prevElements.map((el) => {
-          return el.id === selected.id ? { ...el, width: parsedWidth } : el;
-        });
-      });
+      updateElement(selected.id, {width: parsedWidth});
     }
   };
 
@@ -91,11 +84,7 @@ export default function Toolbar({
       setSelected((prev) => ({ ...prev, height: parsedHeight }));
 
       // Update the element in the list
-      setElements((prevElements) => {
-        return prevElements.map((el) => {
-          return el.id === selected.id ? { ...el, height: parsedHeight } : el;
-        });
-      });
+      updateElement(selected.id, {height: parsedHeight});
     }
   };
 
@@ -113,13 +102,7 @@ export default function Toolbar({
       setSelected((prev) => ({ ...prev, borderRadius: parsedBorderRadius }));
 
       // Update the element in the list
-      setElements((prevElements) => {
-        return prevElements.map((el) => {
-          return el.id === selected.id
-            ? { ...el, borderRadius: parsedBorderRadius }
-            : el;
-        });
-      });
+      updateElement(selected.id, {borderRadius: parsedBorderRadius});
     }
   };
 
@@ -137,11 +120,7 @@ export default function Toolbar({
       setSelected((prev) => ({ ...prev, fontSize: parsedFs }));
 
       // Update the element in the list
-      setElements((prevElements) => {
-        return prevElements.map((el) => {
-          return el.id === selected.id ? { ...el, fontSize: parsedFs } : el;
-        });
-      });
+      updateElement(selected.id, {fontSize: parsedFs});
     }
   };
 
@@ -192,14 +171,7 @@ export default function Toolbar({
     //   return el;
     // });
 
-    setElements((prevElements) => {
-      return prevElements.map((el) => {
-        if (el.id === selected.id) {
-          return { ...el, font: newFont };
-        }
-        return el;
-      });
-    });
+    updateElement(selected.id, {font: newFont});
   };
 
   return (

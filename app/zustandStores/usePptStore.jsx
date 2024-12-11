@@ -27,6 +27,15 @@ var usePptStore = create((set) => ({
     }));
   },
 
+  updatePpt: async (id, updatedDetails) => {
+    await db.ppts.update(id, updatedDetails); // Update in database
+    set((state) => ({
+      ppts: state.ppts.map((ppt) =>
+        ppt.id === id ? { ...ppt, ...updatedDetails } : ppt
+      ),
+    }));
+  },
+
   // Remove ppt
   remPpt: async (id) => {
     await db.ppts.delete(id);
