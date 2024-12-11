@@ -254,7 +254,7 @@ export default function MainArea({
     [resizingElement, resizeDirection, startPos, isCtrlPressed]
   );
 
-  const onResizeEnd = useCallback(() => {
+  const onResizeEnd = useCallback(async () => {
     if (!resizingElement) return;
 
   // Get the final dimensions and positions from the DOM
@@ -264,7 +264,7 @@ export default function MainArea({
   const { width, height, left, top } = elementNode.getBoundingClientRect();
 
   // Update Zustand store with final values
-  updateElement(resizingElement, {
+  await updateElement(resizingElement, {
     // width: Math.round(width),
     // height: Math.round(height),
     // x: Math.round(left),
@@ -406,7 +406,7 @@ export default function MainArea({
         >
           {elements &&
             elements.map((el) =>
-              el.slideId === activeSlide.id ? (
+              el.slideId === activeSlide?.id ? (
                 <div
                   key={el.id}
                   id={`element-${el.id}`}

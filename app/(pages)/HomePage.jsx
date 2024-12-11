@@ -5,15 +5,20 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader, DialogClose } from "@/components/ui/dialog";
 import usePptStore from "@/app/zustandStores/usePptStore";
+import useSlideStore from "../zustandStores/useSlideStore";
+import useElementStore from "../zustandStores/useElementStore";
 
 export const HomePage = () => {
   const router = useRouter();
 
-  //   const [ppts, setPpts] = useState([]);
   const { ppts, loadPpts, addNewPpt, setActivePpt } = usePptStore();
-  //   console.log(usePptStore);
-  //   const [activePpt, setActivePpt] = useState(null);
+  const {newSlide} = useSlideStore();
+  const {newElement} = useElementStore();
+
+  const [jsonInput, setJsonInput] = useState("");
+  const [importError, setImportError] = useState(null);
 
   useEffect(() => {
     loadPpts();
@@ -40,6 +45,41 @@ export const HomePage = () => {
     router.push(`/p/${id}`);
   };
 
+  const handleImport = () => {
+    try {
+      const data = JSON.parse(jsonInput)
+
+      if (!data || !data.ppt || !data.slides || !data.elements || !Array.isArray(data.slides)) {
+        throw new Error("Invalid JSON format.");
+      }
+
+      const newPpt = {
+        id: `ppt-${uid()}`,
+        active: false,
+        name: data.ppt,
+      }
+      addNewPpt(newPpt)
+
+      data.slides.forEach((slide) => {
+        const new_slide = {
+          ...slide,
+          pptId: newPpt.id,
+        }
+        newSlide(new_slide);
+      })
+
+      data.elements.forEach((el) => {
+        newElement(el);
+      })
+
+      setJsonInput("");
+      setImportError(null);
+    } catch (e) {
+      setImportError(e);
+      console.error(e);
+    }
+  }
+
   return (
     <>
       <nav>
@@ -50,10 +90,44 @@ export const HomePage = () => {
             </Link>
           </div>
           <div className="flex gap-4 text-md">
-            <span className="cursor-pointer">File</span>
-            <span className="cursor-pointer">Edit</span>
-            <span className="cursor-pointer">View</span>
-            <span className="cursor-pointer">Insert</span>
+            <Dialog>
+            <DialogTrigger asChild>
+              <span className="cursor-pointer">Import</span>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Import Presentation</DialogTitle>
+                <DialogDescription>Paste your JSON data here to import a presentation:</DialogDescription>
+              </DialogHeader>
+
+              <textarea
+                  className="w-full h-48 mt-4 p-2 border rounded-md"
+                  placeholder="Paste your JSON data here"
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+              />
+
+              {importError && (
+                <div className="text-red-500 mt-2">{importError}</div>
+              )}
+
+              <DialogFooter>
+              <div className="mt-4 flex gap-4">
+                  <DialogClose>
+                    <Button onClick={handleImport} className="bg-[#FFBE7A] text-white">
+                      Import
+                    </Button>
+                  </DialogClose>
+                  <DialogClose asChild>
+                    <Button className="bg-gray-300 text-black">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+            </Dialog>
           </div>
         </div>
       </nav>

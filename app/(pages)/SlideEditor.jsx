@@ -22,7 +22,7 @@ export default function SlideEditor({ pptId }) {
   // const [slides, setSlides] = useState([]);
   const [activeSlide, setActiveSlide] = useState(null);
 
-  const { ppts } = usePptStore();
+  const { ppts, loadPpts } = usePptStore();
   const { slides, loadSlides, newSlide } = useSlideStore();
   const {elements, loadElements, newElement, updateElement, remElement} = useElementStore();
   
@@ -36,14 +36,15 @@ export default function SlideEditor({ pptId }) {
   };
 
   useEffect(() => {
-    const findActivePpt = () => {
+    const findActivePpt = async () => {
+      await loadPpts();
       const curPpt = ppts.find((ppt) => ppt?.id === pptId);
       setCurrentPpt(curPpt || null);
 
       if (!curPpt) {
         console.log("Presentation not found for ID:", pptId);
       } else {
-        console.log("Presentation id found: ", pptId);
+        // console.log("Presentation id found: ", pptId);
       }
     };
 
@@ -180,22 +181,23 @@ export default function SlideEditor({ pptId }) {
 
   const dragref = useRef({});
   
-  const handleMouseDown = (e, id) => {
+  const handleMouseDown = async (e, id) => {
     e.preventDefault();
 
     // Select the element
     const selectedEl = elements.find((element) => element.id === id);
     if (selectedEl) {
       setSelected(selectedEl); // Set the selected element in state
-      updateElement(id, {selected: true})
+      await updateElement(id, {selected: true})
     }
 
-    setSelectedElement({ id, startX: e.clientX + (selectedEl.width/2), startY: e.clientY+ (selectedEl.height/2), initialX: selectedEl.x, initialY: selectedEl.y });
-    dragref.current = { startX: e.clientX + (selectedEl.width/2), startY: e.clientY + (selectedEl.height/2), initialX: selectedEl.x, initialY: selectedEl.y }
+    setSelectedElement({ id, startX: e.clientX, startY: e.clientY, initialX: selectedEl.x, initialY: selectedEl.y, });
+    dragref.current = { startX: e.clientX, startY: e.clientY, initialX: selectedEl.x, initialY: selectedEl.y }
   };
 
   const handleMouseMove = (e) => {
     if (!selectedElement) return;
+    if (!selected) return;
 
     const dx = e.clientX - dragref.current.startX;
     const dy = e.clientY - dragref.current.startY;
@@ -226,16 +228,27 @@ export default function SlideEditor({ pptId }) {
     // }));
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
     if (!selectedElement) return;
 
     const dx = dragref.current.startX - selectedElement.startX;
     const dy = dragref.current.startY - selectedElement.startY;
 
+    const newX = dragref.current.initialX + dx;
+    const newY = dragref.current.initialY + dy;
+
+    setSelected((prev) => ({
+      ...prev,
+      x: newX,
+      y: newY,
+    }))
+    
     // Finalize the element position in state
-    updateElement(selectedElement.id, {
+    await updateElement(selectedElement.id, {
       initialX: dragref.current.initialX + dx,
       initialY: dragref.current.initialY + dy,
+      x: newX,
+      y: newY,
     });
     
     setSelectedElement(null);
@@ -351,7 +364,7 @@ export default function SlideEditor({ pptId }) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        <TopBar />
+        <TopBar currPpt={currentPpt} />
         <Toolbar
           addElement={addElement}
           // setElements={setElements}
