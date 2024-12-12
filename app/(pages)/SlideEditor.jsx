@@ -125,6 +125,7 @@ export default function SlideEditor({ pptId }) {
       textColor: "#000",
       selected: true,
       text: type === "text" ? "Enter text" : "",
+      image: type === 'image' ? null : undefined
     };
 
     newElement(newElem); // Add the new element to the Zustand store
@@ -195,7 +196,7 @@ export default function SlideEditor({ pptId }) {
     dragref.current = { startX: e.clientX, startY: e.clientY, initialX: selectedEl.x, initialY: selectedEl.y }
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = async (e) => {
     if (!selectedElement) return;
     if (!selected) return;
 
@@ -208,7 +209,8 @@ export default function SlideEditor({ pptId }) {
     const element = document.getElementById(`element-${selectedElement.id}`);
     if (element) {
       // console.log('Element found!')
-      element.style.transform = `translate(${newX}px, ${newY}px)`;
+      element.style.left = `${newX}px`
+      element.style.top = `${newY}px`
     }
 
     // updateElement(selectedElement.id, { x: newX, y: newY });
@@ -221,11 +223,11 @@ export default function SlideEditor({ pptId }) {
     //   initialY: newY,
     // }));
 
-    // setSelected((prev) => ({
-    //   ...prev,
-    //   x: newX,
-    //   y: newY,
-    // }));
+    setSelected((prev) => ({
+      ...prev,
+      x: newX,
+      y: newY,
+    }));
   };
 
   const handleMouseUp = async () => {
@@ -234,21 +236,41 @@ export default function SlideEditor({ pptId }) {
     const dx = dragref.current.startX - selectedElement.startX;
     const dy = dragref.current.startY - selectedElement.startY;
 
-    const newX = dragref.current.initialX + dx;
-    const newY = dragref.current.initialY + dy;
+    // const newX = dragref.current.initialX + dx;
+    // const newY = dragref.current.initialY + dy;
+
+    // const { id } = selectedElement;
+
+    // Finalize the position in state and backend
+    const elementNode = document.getElementById(`element-${selectedElement.id}`);
+    if (!elementNode) return;
+
+    const style = window.getComputedStyle(elementNode);
+    const transform = style.transform; // e.g., "matrix(1, 0, 0, 1, 100, 200)"
+    let translateX = 0, translateY = 0;
+
+    if (transform && transform !== "none") {
+      const matrixValues = transform.match(/matrix.*\((.+)\)/)?.[1]?.split(", ");
+      if (matrixValues && matrixValues.length >= 6) {
+        translateX = parseFloat(matrixValues[4]); // Horizontal translation
+        translateY = parseFloat(matrixValues[5]); // Vertical translation
+      }
+    }
+
+    // await updateElement(id, { x: newX, y: newY });
 
     setSelected((prev) => ({
       ...prev,
-      x: newX,
-      y: newY,
+      x: prev.x + translateX,
+      y: prev.y + translateY,
     }))
     
     // Finalize the element position in state
     await updateElement(selectedElement.id, {
       initialX: dragref.current.initialX + dx,
       initialY: dragref.current.initialY + dy,
-      x: newX,
-      y: newY,
+      x: selected.x + translateX,
+      y: selected.y + translateY,
     });
     
     setSelectedElement(null);
@@ -364,10 +386,10 @@ export default function SlideEditor({ pptId }) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        <TopBar currPpt={currentPpt} />
+        <TopBar currPpt={currentPpt} activeSlide={activeSlide} setActiveSlide={setActiveSlide} />
         <Toolbar
           addElement={addElement}
-          // setElements={setElements}
+          activeSlide={activeSlide}
           selected={selected}
           setSelected={setSelected}
           color={color}

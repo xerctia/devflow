@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Import, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -92,7 +92,12 @@ export const HomePage = () => {
           <div className="flex gap-4 text-md">
             <Dialog>
             <DialogTrigger asChild>
-              <span className="cursor-pointer">Import</span>
+              <Button variant="ghost" asChild>
+                <div className="flex gap-2 items-center">
+                  <Import className="h-4 w-4" />
+                  <span className="cursor-pointer">Import</span>
+                </div>
+              </Button>
             </DialogTrigger>
 
             <DialogContent>
@@ -102,7 +107,7 @@ export const HomePage = () => {
               </DialogHeader>
 
               <textarea
-                  className="w-full h-48 mt-4 p-2 border rounded-md"
+                  className="w-full h-48 mt-4 p-2 border rounded-md outline-none"
                   placeholder="Paste your JSON data here"
                   value={jsonInput}
                   onChange={(e) => setJsonInput(e.target.value)}
@@ -115,12 +120,12 @@ export const HomePage = () => {
               <DialogFooter>
               <div className="mt-4 flex gap-4">
                   <DialogClose>
-                    <Button onClick={handleImport} className="bg-[#FFBE7A] text-white">
+                    <Button onClick={handleImport} className="bg-[#FFBE7A] [#3f3f3f]">
                       Import
                     </Button>
                   </DialogClose>
                   <DialogClose asChild>
-                    <Button className="bg-gray-300 text-black">
+                    <Button variant="destructiveNeutral">
                       Cancel
                     </Button>
                   </DialogClose>

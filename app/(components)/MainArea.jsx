@@ -4,6 +4,7 @@ import Head from "next/head";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import useSlideStore from "../zustandStores/useSlideStore";
 import useElementStore from "../zustandStores/useElementStore";
+import Image from "next/image";
 
 const DynamicFontLoader = ({ font }) => {
   useEffect(() => {
@@ -108,7 +109,7 @@ export default function MainArea({
       //   return updatedElements;
       // });
 
-      const resizeRef = useRef(null);
+  const resizeRef = useRef(null);
       
   const onResizeStart = useCallback((e, id, direction) => {
     e.stopPropagation();
@@ -129,37 +130,6 @@ export default function MainArea({
 
       const dx = e.clientX - startPos.x;
       const dy = e.clientY - startPos.y;
-
-      // const updatedElement = elements.find((el) => el.id === resizingElement)
-      // if (!updateElement) return;
-
-      // let newWidth = updatedElement.width;
-      // let newHeight = updatedElement.height;
-      // let newX = updatedElement.x;
-      // let newY = updatedElement.y;
-
-      // Extract the current width and height from the element
-    // let { width, height, x, y } = updatedElement;
-
-      // Handle resizing in different directions
-      // if (resizeDirection.includes("right")) {
-      //   newWidth = Math.max(1, updatedElement.width + dx);
-      // }
-      // if (resizeDirection.includes("left")) {
-        
-      //   newWidth = Math.max(1, updatedElement.width - dx);
-      //   const widthChange = updatedElement.width - newWidth;
-      //   newX = updatedElement.x + widthChange;
-      // }
-      // if (resizeDirection.includes("bottom")) {
-      //   newHeight = Math.max(1, updatedElement.height + dy);
-      // }
-      // if (resizeDirection.includes("top")) {
-        
-      //   newHeight = Math.max(1, updatedElement.height - dy);
-      //   const heightChange = updatedElement.height - newHeight;
-      //   newY = updatedElement.y + heightChange;
-      // }
 
       const elementNode = resizeRef.current;
       if (!elementNode) return;
@@ -217,39 +187,8 @@ export default function MainArea({
       // Apply new dimensions and position directly to the DOM
       elementNode.style.width = `${width}px`;
       elementNode.style.height = `${height}px`;
-      // elementNode.style.left = `${left}px`;
-      // elementNode.style.top = `${top}px`;
 
-    // Update the element in the Zustand store
-    // updateElement(resizingElement, { x, y, width, height });
-
-      // Maintain aspect ratio when Ctrl is pressed (if resizing is rectangle)
-      // if (isCtrlPressed && updatedElement.type === "rectangle") {
-      //   const maxChange = Math.max(
-      //     Math.abs(newWidth - updatedElement.width),
-      //     Math.abs(newHeight - updatedElement.height)
-      //   );
-      //   newWidth = updatedElement.width + Math.sign(dx) * maxChange;
-      //   newHeight = updatedElement.height + Math.sign(dy) * maxChange;
-      // }
-
-      // setSelected((prev) => ({
-      //   ...prev,
-      //   x: newX,
-      //   y: newY,
-      //   width: newWidth,
-      //   height: newHeight,
-      // }));
-      
-      // Update element using updateElement from Zustand
-      // updateElement(resizingElement, {
-      //   x: newX,
-      //   y: newY,
-      //   width: newWidth,
-      //   height: newHeight,
-      // });
-
-      setStartPos({ x: e.clientX, y: e.clientY });
+    setStartPos({ x: e.clientX, y: e.clientY });
     },
     [resizingElement, resizeDirection, startPos, isCtrlPressed]
   );
@@ -265,14 +204,8 @@ export default function MainArea({
 
   // Update Zustand store with final values
   await updateElement(resizingElement, {
-    // width: Math.round(width),
-    // height: Math.round(height),
-    // x: Math.round(left),
-    // y: Math.round(top),
     width: width,
     height: height,
-    // x: left,
-    // y: top,
   });
 
   // Reset resizing state
@@ -401,7 +334,7 @@ export default function MainArea({
               handleDeSelect();
             }
           }}
-          id="working-area"
+          id={`working-area`}
           className="aspect-[16/9] bg-white shadow-lg mx-auto max-w-4xl relative overflow-hidden"
         >
           {elements &&
@@ -414,6 +347,7 @@ export default function MainArea({
                     position: "absolute",
                     left: el.x,
                     top: el.y,
+                    // transform: `translate(0, 0)`,
                     width: el.type === "triangle" ? 0 : el.width, // Triangle doesn't use width directly
                     height: el.type === "triangle" ? 0 : el.height, // Triangle doesn't use height directly
                     minHeight: 0,
@@ -427,7 +361,7 @@ export default function MainArea({
                     border: "none",
                     borderRadius:
                       el.type === "ellipse" ? "50%" : el.borderRadius,
-                    backgroundColor: el.bgColor,
+                    backgroundColor: el.type !== 'image' ? el.bgColor : 'transparent',
                     color: el.textColor || "#000",
                     cursor: "move",
                   }}
@@ -514,6 +448,10 @@ export default function MainArea({
                       }}
                     />
                   ) : null}
+
+                  {el.type === "image" && el.image && (
+                    <img src={el.image} alt="Image couldn't load" style={{borderRadius: el.borderRadius, width: "100%", height: "100%"}} />
+                  )}
 
                   {/* Resizing Handles */}
                   {["top-left", "top-right", "bottom-left", "bottom-right"].map(

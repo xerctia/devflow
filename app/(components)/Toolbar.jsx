@@ -8,7 +8,6 @@ import {
   MousePointer2,
   Minus,
   Plus,
-  FileImage,
   Bold,
   Italic,
   Underline,
@@ -20,10 +19,13 @@ import {
   Text,
   Type,
   Baseline,
+  FileImage,
 } from "lucide-react";
 import ShapeButton from "./ShapeButton";
 import Select from "react-select";
 import useElementStore from "../zustandStores/useElementStore";
+import { Button } from "@/components/ui/button";
+import { handleImageUpload } from "@/controllers/ImageUpload";
 
 export default function Toolbar({
   addElement,
@@ -33,11 +35,11 @@ export default function Toolbar({
   setColor,
   font,
   setFont,
-  // setElements,
+  activeSlide
 }) {
   const [fonts, setFonts] = useState([]);
 
-  const {updateElement} = useElementStore();
+  const {updateElement, newElement} = useElementStore();
 
   const handleColorChange = (e) => {
     // setColor(e.target.value);
@@ -174,6 +176,10 @@ export default function Toolbar({
     updateElement(selected.id, {font: newFont});
   };
 
+  const uploadImage = (e, newElement, activeSlide) => {
+    handleImageUpload(e, newElement, activeSlide)
+  }
+
   return (
     <div className="flex flex-col border-b bg-gray-50">
       <div className="flex items-center space-x-1 p-1">
@@ -186,7 +192,13 @@ export default function Toolbar({
           <span className="mx-2">100%</span>
           <Plus className="h-4 w-4" />
         </div>
-        <FileImage className="h-4 w-4" />
+
+        <Button variant="ghost" onClick={() => document.getElementById('img-upload').click()}>
+          <FileImage className="h-4 w-4" />
+        </Button>
+        
+        <input type="file" id="img-upload" accept="image/*" className="invisible" onChange={(e) => uploadImage(e, newElement, activeSlide)} />
+        
       </div>
       <div className="flex items-center space-x-1 p-1 border-t">
         <ShapeButton icon={TextIcon} onClick={() => addElement("text")} />

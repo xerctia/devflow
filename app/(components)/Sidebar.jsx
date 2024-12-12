@@ -63,7 +63,7 @@ export default function Sidebar({
         >
           <div className="absolute top-[10%] left-[7%] flex items-center gap-2">
             <Pencil className="h-3 w-3" onClick={(e) => handleNameEdit(slide)} />
-            <Trash2 className="h-3 w-3" onClick={(e) => remSlide(slide.id)} />
+            <Trash2 className="h-3 w-3" stroke={"#e65245"} onClick={(e) => remSlide(slide.id)} />
           </div>
           {editingSlideId === slide.id ? (
             <input
@@ -73,7 +73,7 @@ export default function Sidebar({
               onBlur={() => handleNameSave(slide)} // Save on blur
               onKeyDown={(e) => handleEnterPress(e, slide)} // Save on Enter
               autoFocus
-              className="max-w-32 bg-[#FFBE7A]/10 border-none outline-none rounded-md px-2 py-2 text-center"
+              className={`max-w-32 bg-[#FFBE7A]/10 border border-[#ccc] outline-none rounded-md px-2 py-2 text-center`}
             />
           ) : (
             <span
