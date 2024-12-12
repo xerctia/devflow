@@ -26,6 +26,7 @@ import Select from "react-select";
 import useElementStore from "../zustandStores/useElementStore";
 import { Button } from "@/components/ui/button";
 import { handleImageUpload } from "@/controllers/ImageUpload";
+import useSlideStore from "../zustandStores/useSlideStore";
 
 export default function Toolbar({
   addElement,
@@ -38,8 +39,14 @@ export default function Toolbar({
   activeSlide
 }) {
   const [fonts, setFonts] = useState([]);
+  const [bgColor, setBgColor] = useState("#000000");
 
   const {updateElement, newElement} = useElementStore();
+  const {updateSlide} = useSlideStore();
+
+  useEffect(() => {
+    setBgColor(activeSlide?.bgColor)
+  }, [activeSlide])
 
   const handleColorChange = (e) => {
     // setColor(e.target.value);
@@ -47,6 +54,12 @@ export default function Toolbar({
     setSelected((prev) => ({...prev, bgColor: e.target.value}))
     updateElement(selected.id, {bgColor: e.target.value})
   };
+
+  const handleBgColorChange = (e) => {
+    const newBgCol = e.target.value;
+    updateSlide(activeSlide.id, {bgColor: newBgCol});
+    setBgColor(activeSlide?.bgColor)
+  }
 
   const handleTextColorChange = (e) => {
     if (!selected) return;
@@ -199,6 +212,22 @@ export default function Toolbar({
         
       {/* </div> */}
       <div className="flex items-center space-x-1 p-1 border-t">
+        {/* <Button variant="ghost" className="cursor-pointer" asChild>
+          <label htmlFor="bg-color-picker" className={`w-6 h-6 rounded-full bg-${bgColor} border border-[#444] outline-none`}
+            style={{ backgroundColor: color }}>
+          </label>
+        </Button>
+
+        <input
+          type="color"
+          id="bg-color-picker"
+          className="hidden"
+          value={bgColor}
+          onChange={handleBgColorChange}
+        />
+
+        <Minus className="rotate-90" strokeWidth={1} /> */}
+
         <ShapeButton icon={TextIcon} onClick={() => addElement("text")} />
         <ShapeButton icon={Square} onClick={() => addElement("rectangle")} />
         <ShapeButton icon={Circle} onClick={() => addElement("ellipse")} />

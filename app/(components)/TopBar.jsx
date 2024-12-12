@@ -89,7 +89,9 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
 
   useEffect(() => {
     const ssShortcutKey = (e) => {
-      // e.preventDefault();
+      if (e.target.tagName==="INPUT" || e.target.tagName==="TEXTAREA") return;
+      
+      e.preventDefault();
 
       if (e.key === 'F11' || e.key === 'F7') {
         handleSlideshowStart();
@@ -107,21 +109,25 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
     }
   }, [activeSlide])
 
-  // useEffect(() => {
-  //   const handleKeyDownNav = (e) => {
-  //     if (e.key === "ArrowRight") {
-  //       gotoNextSlide();
-  //     } else if (e.key === 'ArrowLeft') {
-  //       gotoPrevSlide();
-  //     }
-  //   }
+  useEffect(() => {
+    const handleKeyDownNav = (e) => {
+      if (e.target.tagName==="INPUT" || e.target.tagName==="TEXTAREA") return;
 
-  //   document.addEventListener('keydown', handleKeyDownNav)
+      e.preventDefault();
 
-  //   return () => {
-  //     document.removeEventListener('keydown', handleKeyDownNav)
-  //   }
-  // }, [activeSlide])
+      if (e.key === "ArrowRight") {
+        gotoNextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        gotoPrevSlide();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDownNav)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDownNav)
+    }
+  }, [activeSlide])
   
   return (
     <>

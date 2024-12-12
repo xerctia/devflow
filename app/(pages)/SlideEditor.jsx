@@ -365,7 +365,7 @@ export default function SlideEditor({ pptId }) {
             y: selected.y,
           };
 
-          addElement(duplicate);
+          newElement(duplicate);
         }
       }
     };
