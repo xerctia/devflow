@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# DevFlow
+#### Presentations for developers, by developers
+DevFlow is a powerful yet simple presentation platform that empowers you to create stunning presentations effortlessly. With intuitive tools and a user-friendly interface, it’s designed to help you craft your ideas on the go.
 
-## Getting Started
+### Features
+- <b>Interactive Slide Editor</b>: Add, edit and customize slides with ease.
+- <b>Shape Tools</b>: Create text boxes, rectangles, circles, or even bring your own images. 
+- <b>Positioning Elements</b>: Accurately position elements from the toolbar, or drag the element to where you need it to be.
+- <b>Customizable Styles</b>: Adjust colors, fonts and dimensions.
+- <b>Presentation Mode</b>: Start a slideshow by using the shortcut key F7 or F11.
+- <b>Persistence</b>: All changes are saved automatically on your local machine.
 
-First, run the development server:
+### Getting Started
+#### Prerequisites
+- Node.js (v16+ recommended)
+- npm or yarn
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+#### Installation
+- Clone the repo:
 ```
+git clone https://github.com/xerctia/devflow
+cd devflow
+```
+- Install dependencies:
+```
+npm install
+```
+- Start the server:
+```
+npm run dev
+```
+- Open your browser and go to http://localhost:3000/
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Shortcuts
+- New Presentation: <kbd>Ctrl + Alt + N</kbd></br></br>
+- Next Slide: <kbd>Tab</kbd></br></br>
+- Previous Slide: <kbd>Shift + Tab</kbd></br></br>
+- Start Slideshow: <kbd>F7 or F11</kbd></br></br>
+- Exit Slideshow: <kbd>Esc</kbd></br></br>
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Screenshots
+#### 1. Home Page
+![Home Page](./public/screenshots/homepage.png)
+#### 2. Slide Editor
+![Home Page](./public/screenshots/slides.png)
+#### 3. Export Presentation
+![Home Page](./public/screenshots/export.png)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Technologies Used
+- <b>Frontend:</b> Next.js and ShadCN
+- <b>Data Storage:</b> IndexedDB with Dexie (saves on local machine)
+- <b>Backend + Database:</b> Convex (in development)

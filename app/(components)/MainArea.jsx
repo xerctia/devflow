@@ -361,7 +361,7 @@ export default function MainArea({
                     border: "none",
                     borderRadius:
                       el.type === "ellipse" ? "50%" : el.borderRadius,
-                    backgroundColor: el.type !== 'image' ? el.bgColor : 'transparent',
+                    backgroundColor: el.type !== 'image' || el.type !== 'text' ? el.bgColor : 'transparent',
                     color: el.textColor || "#000",
                     cursor: "move",
                   }}

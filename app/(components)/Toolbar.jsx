@@ -182,8 +182,8 @@ export default function Toolbar({
 
   return (
     <div className="flex flex-col border-b bg-gray-50">
-      <div className="flex items-center space-x-1 p-1">
-        <Undo className="h-4 w-4" />
+      {/* <div className="flex items-center space-x-1 p-1"> */}
+        {/* <Undo className="h-4 w-4" />
         <Redo className="h-4 w-4" />
         <Printer className="h-4 w-4" />
         <MousePointer2 className="h-4 w-4" />
@@ -191,25 +191,28 @@ export default function Toolbar({
           <Minus className="h-4 w-4" />
           <span className="mx-2">100%</span>
           <Plus className="h-4 w-4" />
-        </div>
+        </div> */}
 
-        <Button variant="ghost" onClick={() => document.getElementById('img-upload').click()}>
-          <FileImage className="h-4 w-4" />
-        </Button>
         
-        <input type="file" id="img-upload" accept="image/*" className="invisible" onChange={(e) => uploadImage(e, newElement, activeSlide)} />
         
-      </div>
+        
+        
+      {/* </div> */}
       <div className="flex items-center space-x-1 p-1 border-t">
         <ShapeButton icon={TextIcon} onClick={() => addElement("text")} />
         <ShapeButton icon={Square} onClick={() => addElement("rectangle")} />
         <ShapeButton icon={Circle} onClick={() => addElement("ellipse")} />
         <ShapeButton icon={Triangle} onClick={() => addElement("triangle")} />
+        <Button variant="ghost" onClick={() => document.getElementById('img-upload').click()}>
+          <FileImage className="h-4 w-4" />
+        </Button>
+
+        <input type="file" id="img-upload" accept="image/*" className="hidden" onChange={(e) => uploadImage(e, newElement, activeSlide)} />
 
         {selected && (
           // <div className="flex items-center space-x-1 p-1">
           <div className="flex items-center">
-            <Minus className="rotate-90" />
+            <Minus className="rotate-90" strokeWidth={1} />
 
             {/* Color Picker Button */}
             <ShapeButton

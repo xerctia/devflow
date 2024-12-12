@@ -89,7 +89,7 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
 
   useEffect(() => {
     const ssShortcutKey = (e) => {
-      e.preventDefault();
+      // e.preventDefault();
 
       if (e.key === 'F11' || e.key === 'F7') {
         handleSlideshowStart();
@@ -107,21 +107,21 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
     }
   }, [activeSlide])
 
-  useEffect(() => {
-    const handleKeyDownNav = (e) => {
-      if (e.key === "ArrowRight") {
-        gotoNextSlide();
-      } else if (e.key === 'ArrowLeft') {
-        gotoPrevSlide();
-      }
-    }
+  // useEffect(() => {
+  //   const handleKeyDownNav = (e) => {
+  //     if (e.key === "ArrowRight") {
+  //       gotoNextSlide();
+  //     } else if (e.key === 'ArrowLeft') {
+  //       gotoPrevSlide();
+  //     }
+  //   }
 
-    document.addEventListener('keydown', handleKeyDownNav)
+  //   document.addEventListener('keydown', handleKeyDownNav)
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDownNav)
-    }
-  }, [activeSlide])
+  //   return () => {
+  //     document.removeEventListener('keydown', handleKeyDownNav)
+  //   }
+  // }, [activeSlide])
   
   return (
     <>

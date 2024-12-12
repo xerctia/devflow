@@ -80,6 +80,20 @@ export const HomePage = () => {
     }
   }
 
+  useEffect(() => {
+    const handleShortCut = (e) => {
+      if (e.ctrlKey && e.altKey && e.key.toUpperCase() === "N") {
+        addPpt();
+      }
+    }
+
+    document.addEventListener('keydown', handleShortCut);
+
+    return () => {
+      document.removeEventListener('keydown', handleShortCut);
+    }
+  }, [ppts])
+
   return (
     <>
       <nav>
