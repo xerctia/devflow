@@ -28,9 +28,9 @@ const DynamicFontLoader = ({ font }) => {
 
     return () => {
       // Clean up font link if necessary
-      if (document.getElementById(linkElement.id)) {
-        document.head.removeChild(linkElement);
-      }
+      // if (document.getElementById(linkElement.id)) {
+      //   document.head.removeChild(linkElement);
+      // }
     };
   }, [font]);
 
@@ -44,6 +44,7 @@ export default function MainArea({
   activeSlide,
   color,
   font,
+  selected,
   setSelected,
   onMouseDown,
   onTextChange,
@@ -325,7 +326,7 @@ export default function MainArea({
 
   return (
     <>
-      <DynamicFontLoader font={font} />
+      {/* <DynamicFontLoader font={el.font} /> */}
 
       <div className="flex-1 p-8 overflow-auto bg-gray-100">
         <div
@@ -361,7 +362,7 @@ export default function MainArea({
                     border: "none",
                     borderRadius:
                       el.type === "ellipse" ? "50%" : el.borderRadius,
-                    backgroundColor: el.type !== 'image' || el.type !== 'text' ? el.bgColor : 'transparent',
+                    backgroundColor: el.type==='text' ? 'transparent' : el.type !== 'image' || (el.type !== 'text' && el.text) ? el.bgColor : 'transparent',
                     color: el.textColor || "#000",
                     cursor: "move",
                   }}
@@ -381,6 +382,7 @@ export default function MainArea({
                   }}
                   // onClick={() => handleElementClick(el.id)}
                 >
+                  <DynamicFontLoader font={el.font} />
                   {(el.type === "rectangle" || el.type === "ellipse") &&
                     el.text && (
                       <textarea
@@ -433,6 +435,7 @@ export default function MainArea({
                           outline: "none",
                           zIndex: 2,
                           cursor: "text", // Use text cursor when hovering over the textarea
+                          overflowY: 'hidden',
                         }}
                       />
                     </div>

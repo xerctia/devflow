@@ -7,6 +7,7 @@ import useElementStore from "../zustandStores/useElementStore";
 import usePptStore from "../zustandStores/usePptStore";
 import { useParams } from "next/navigation";
 
+
 export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [curPpt, setCurPpt] = useState(null);
@@ -131,7 +132,7 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
   
   return (
     <>
-    <div className="flex items-center px-3 py-2 gap-6 border-b">
+      <div className="flex items-center px-3 py-2 gap-6 border-b">
       <div className="flex items-center gap-4">
         <a href="/">
           <div className="text-xl font-bold text-[#FFBE7A] hover:text-[#ea9b47]">DevFlow</div>
@@ -186,6 +187,7 @@ export default function TopBar({currPpt, activeSlide, setActiveSlide}) {
         
       {/* </div> */}
     </div>
+    
 
         {/* Modal */}
         <Dialog open={isExportModalOpen} onOpenChange={setExportModalOpen}>

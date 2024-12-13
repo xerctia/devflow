@@ -177,7 +177,7 @@ export default function Toolbar({
 
   const handleFontChange = (selectedOption) => {
     const newFont = selectedOption.value;
-    setFont(newFont);
+    // setFont(newFont);
 
     // const updatedElements = elements.map((el) => {
     //   if (el.id === selected.id) {
@@ -292,8 +292,8 @@ export default function Toolbar({
                     options={fontOptions}
                     onChange={handleFontChange}
                     value={{
-                      label: font || "Poppins",
-                      value: font || "Poppins",
+                      label: selected?.font || "Poppins",
+                      value: selected?.font || "Poppins",
                     }}
                     styles={fontSelectStyles}
                     isSearchable

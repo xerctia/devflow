@@ -411,6 +411,7 @@ export default function SlideEditor({ pptId }) {
             color={color}
             font={font}
             // setElements={setElements}
+            selected={selected}
             setSelected={setSelected}
             onMouseDown={handleMouseDown}
             onTextChange={handleTextChange}
