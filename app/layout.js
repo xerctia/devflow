@@ -16,6 +16,9 @@ export const metadata = {
   title: "DevFlow",
   description:
     "DevFlow is an online presentation platform for making presentations and designing slides on the go.",
+  icons: {
+    icon: '/assets/devflow_ico_full.png'
+  }
 };
 
 export default function RootLayout({ children }) {
